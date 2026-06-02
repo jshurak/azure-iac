@@ -2,6 +2,8 @@ name: lint-validate-deploy-infrastructure
 
 on:
   push:
+    paths:
+      - 'azure-iac-0/**'
     branches:
       - main
 
