@@ -12,7 +12,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./azure-iac-0
+    working-directory: azure-iac-0/
 
 jobs:
   lint:

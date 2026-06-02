@@ -13,7 +13,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./azure-iac-0/
+    working-directory: azure-iac-0/
 
 jobs:
   lint:
@@ -36,7 +36,7 @@ jobs:
       - name: Validate Bicep Template
         uses: azure/bicep-deploy@v2
         with:
-          path: ./azure-iac-0/
+          path: azure-iac-0/
           type: deployment
           operation: validate
           scope: subscription
@@ -50,7 +50,7 @@ jobs:
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
         with:
-          path: ./azure-iac-0/
+          path: azure-iac-0/
           type: deployment
           operation: whatIf
           scope: subscription
@@ -77,7 +77,7 @@ jobs:
       - name: Deploy to Azure
         uses: azure/bicep-deploy@v2
         with:
-          path: ./azure-iac-0/
+          path: azure-iac-0/
           type: deploymentStack
           operation: create
           scope: subscription
