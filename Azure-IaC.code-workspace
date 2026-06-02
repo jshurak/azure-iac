@@ -1,12 +1,7 @@
 {
   "folders": [
     {
-      "name": "Azure-IaC",
       "path": "."
-    },
-    {
-      "name": "azure-iac-0",
-      "path": "azure-iac-0"
     }
   ]
 }
