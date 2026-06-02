@@ -27,12 +27,12 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVnet 'modules/network.bicep' = {
+module coreVNet 'modules/network.bicep' = {
   scope: coreResourceGroup
-  params: {
+  params:{
     location: location
     CIDR: CIDR
-    ipAddressSpace: ipAddressSpace
+    ipAddressSpace: ipAddressSpace 
     namePrefix: namePrefix
   }
 }
