@@ -11,6 +11,10 @@ permissions:
   id-token: write
   contents: read
 
+defaults:
+  run:
+    working-directory: ./azure-iac-0
+
 jobs:
   lint:
     runs-on: ubuntu-latest
