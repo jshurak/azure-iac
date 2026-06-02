@@ -1,4 +1,4 @@
-name: lint-validate-deploy-infrastructure
+name: iac-0-lint-validate-deploy-infrastructure
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
           scope: subscription
           name: main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          resource-group-name: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
           template-file: ./main.bicep
           parameters-file: ./main.bicepparam
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
@@ -50,7 +50,7 @@ jobs:
           scope: subscription
           name: main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          resource-group-name: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
           template-file: ./main.bicep
           parameters-file: ./main.bicepparam
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
