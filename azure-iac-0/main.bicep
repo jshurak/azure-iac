@@ -10,7 +10,7 @@ param namePrefix string
 @description('Replication SKU for the core storage account (LRS or zone-redundant ZRS).')
 @allowed([
   'Standard_LRS'
-  'Standard_ZRS'
+  //'Standard_ZRS'
 ])
 param storageSku string
 
