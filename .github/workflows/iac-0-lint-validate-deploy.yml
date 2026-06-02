@@ -49,7 +49,6 @@ jobs:
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
         with:
-          path: azure-iac-0/
           type: deployment
           operation: whatIf
           scope: subscription
@@ -76,15 +75,14 @@ jobs:
       - name: Deploy to Azure
         uses: azure/bicep-deploy@v2
         with:
-          path: azure-iac-0/
           type: deploymentStack
           operation: create
           scope: subscription
           name: main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
-          template-file: ./main.bicep
-          parameters-file: ./main.bicepparam
+          template-file: azure-iac-0/main.bicep
+          parameters-file: azure-iac-0/main.bicepparam
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
           action-on-unmanage-resources: delete
           deny-settings-mode: none
