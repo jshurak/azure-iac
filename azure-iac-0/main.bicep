@@ -27,7 +27,7 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet 'modules/network.bicep' = {
+module coreVNet '../modules/networkhub.bicep' = {
   scope: coreResourceGroup
   params:{
     location: location
@@ -38,7 +38,7 @@ module coreVNet 'modules/network.bicep' = {
 }
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
-module coreKeyvault 'modules/keyvault.bicep' = {
+module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
     location: location
@@ -47,7 +47,7 @@ module coreKeyvault 'modules/keyvault.bicep' = {
 }
 
 @description('Core storage account for diagnostics, artifacts, or shared blob data.')
-module coreStorage 'modules/storage.bicep' = {
+module coreStorage '../modules/storage.bicep' = {
   scope: coreResourceGroup
   params: {
     namePrefix: namePrefix
