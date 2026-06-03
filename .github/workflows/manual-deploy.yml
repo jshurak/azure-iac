@@ -37,7 +37,6 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-0/main.bicep
           parameters-file: azure-iac-0/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
           location: eastus2
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
@@ -50,7 +49,6 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-0/main.bicep
           parameters-file: azure-iac-0/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
           location: eastus2
   deploy:
     runs-on: ubuntu-latest
@@ -74,9 +72,8 @@ jobs:
           name: main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
-          template-file: ./main.bicep
-          parameters-file: ./main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          template-file: azure-iac-0/main.bicep
+          parameters-file: azure-iac-0/main.bicepparam
           action-on-unmanage-resources: delete
           deny-settings-mode: none
           location: eastus2
