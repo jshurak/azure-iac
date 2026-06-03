@@ -27,7 +27,7 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../modules/hubnetwork.bicep' = {
+module coreVNet '../modules/networkhub.bicep' = {
   scope: coreResourceGroup
   params:{
     location: location
