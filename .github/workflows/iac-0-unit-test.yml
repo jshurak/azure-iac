@@ -10,10 +10,6 @@ permissions:
   contents: read
   security-events: write
 
-defaults:
-  run:
-    working-directory: azure-iac-0/
-
 jobs:
   lint:
     runs-on: ubuntu-latest

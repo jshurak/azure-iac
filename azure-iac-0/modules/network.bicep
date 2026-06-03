@@ -19,6 +19,7 @@ param subnets object = {
   Firewall: '26'
   Gateway: '26'
   Bastion: '26'
+  PrivateLink: '24'
 }
 
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
