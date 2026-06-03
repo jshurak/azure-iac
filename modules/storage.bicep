@@ -12,12 +12,29 @@ param storageKind string = 'StorageV2'
 @description('Public access policy for blob.')
 param blobPublicAccess bool = false
 
+@description('name for container')
+param containerName string = ''
+
 @description('StorageV2 account with public blob access disabled.')
-module coreStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
+module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
   params: {
     name: '${namePrefix}${uniqueString(resourceGroup().id)}'
     allowBlobPublicAccess: blobPublicAccess
     kind: storageKind
     skuName: storageSku
+    location: resourceGroup().location
+  }
+}
+
+output resStorageName string = resStorage.outputs.name
+
+module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if(!empty(containerName)) {
+  params: {
+    storageAccountName: resStorage.outputs.name
+    containers: [
+      {
+        name: containerName
+      }
+    ]
   }
 }
