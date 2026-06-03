@@ -3,6 +3,9 @@ metadata description = 'Core storage account for shared blob data and artifacts.
 @description('Prefix used in the storage account name (for example, jscorestorage).')
 param namePrefix string
 
+@description('Storage account name')
+param storageAccountName string = ''
+
 @description('Azure Storage replication SKU (Standard_LRS or Standard_ZRS).')
 param storageSku string
 
@@ -15,10 +18,15 @@ param blobPublicAccess bool = false
 @description('Blob container names to create in the storage account.')
 param containerNames string[] = []
 
+
+
+@description('calculate a unique name for the storage account if the storageAccountName is empty')
+var vStorageAccountName = !empty(storageAccountName) ? storageAccountName : '${namePrefix}${uniqueString(resourceGroup().id)}'
+
 @description('StorageV2 account with public blob access disabled.')
 module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
   params: {
-    name: '${namePrefix}${uniqueString(resourceGroup().id)}'
+    name:vStorageAccountName
     allowBlobPublicAccess: blobPublicAccess
     kind: storageKind
     skuName: storageSku
