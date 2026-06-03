@@ -40,3 +40,7 @@ module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
     }]
   }
 }
+
+
+output subnetIDs array = hubNetwork.outputs.subnetResourceIds
+output subnetNames array = hubNetwork.outputs.subnetNames
