@@ -1,31 +1,45 @@
 targetScope = 'subscription'
+metadata description = 'Workload landing zone: resource group, identity, storage, private endpoint, App Service plan, and function app.'
 
-param namePrefix string 
-param storagesku string 
-param location string 
+@description('Prefix applied to workload resource names (for example, wl01-rg, wl01stacc).')
+param namePrefix string
+
+@description('Replication SKU for the workload storage account (for example, Standard_LRS).')
+param storagesku string
+
+@description('Azure region for the workload resource group and deployed resources.')
+param location string
+
+@description('Name of the subnet used for private endpoints in the hub virtual network.')
 param subnetName string
+
+@description('Name of the existing hub virtual network that contains the private link subnet.')
 param vnetName string
+
+@description('Resource group that contains the hub virtual network.')
 param vnetResourceGroup string
+
+@description('Name of the private endpoint for blob storage access.')
 param privateEndpointName string
+
+@description('Name of the Flex Consumption function app.')
 param functionAppName string
 
-//create our resource group
-@description('Resource group that hosts workload.')
+@description('Resource group that hosts the workload.')
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-rg'
   location: location
 }
 
-//create an identity for function app to access the storage account
+@description('User-assigned managed identity for function app storage access.')
 module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1' = {
   scope: resourceGroup
   params: {
     name: '${namePrefix}-identity'
   }
 }
- 
 
-//function app requires we have some storage for triggers
+@description('Storage account, blob container, and RBAC for the function app deployment and triggers.')
 module storage '../modules/storage.bicep' = {
   scope: resourceGroup
   params: {
@@ -33,7 +47,7 @@ module storage '../modules/storage.bicep' = {
     storageSku: storagesku
     containerNames: ['${namePrefix}-app-container']
     blobPublicAccess: false
-    roleAssignments:[
+    roleAssignments: [
       {
         principalId: identity.outputs.principalId
         principalType: 'ServicePrincipal'
@@ -43,8 +57,7 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-
-//create the app service plan (if required)
+@description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
   scope: resourceGroup
   params: {
@@ -52,18 +65,19 @@ module appPlan '../modules/appserviceplan.bicep' = {
   }
 }
 
-
-//get network resources. These exist in a different resource group
+@description('Hub virtual network referenced for private link connectivity.')
 resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: az.resourceGroup(vnetResourceGroup)
   name: vnetName
 }
+
+@description('Subnet in the hub VNet where the storage private endpoint is placed.')
 resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = {
   parent: vnet
   name: subnetName
 }
 
-//create a private endpoint so the function app doesn't have to travel the public internet.
+@description('Private endpoint so the function app reaches blob storage over the private network.')
 module privateEndpoint '../modules/privateendpoints.bicep' = {
   scope: resourceGroup
   params: {
@@ -73,7 +87,7 @@ module privateEndpoint '../modules/privateendpoints.bicep' = {
   }
 }
 
-
+@description('Python Flex Consumption function app with identity-based deployment storage.')
 module functionApp '../modules/functionapp.bicep' = {
   scope: resourceGroup
   params: {

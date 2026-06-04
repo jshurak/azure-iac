@@ -18,9 +18,9 @@ param blobPublicAccess bool = false
 @description('Blob container names to create in the storage account.')
 param containerNames string[] = []
 
+@description('RBAC role assignments applied to the storage account (principalId, principalType, roleDefinitionIdOrName).')
 param roleAssignments array = []
 
-@description('calculate a unique name for the storage account if the storageAccountName is empty')
 var vStorageAccountName = !empty(storageAccountName)
   ? storageAccountName
   : '${namePrefix}${uniqueString(resourceGroup().id)}'
@@ -37,7 +37,10 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
   }
 }
 
+@description('Name of the deployed storage account.')
 output resStorageName string = resStorage.outputs.name
+
+@description('Full ARM resource ID of the deployed storage account.')
 output resStorageID string = resStorage.outputs.resourceId
 
 module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if (!empty(containerNames)) {
@@ -51,6 +54,7 @@ module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = 
   }
 }
 
+@description('Blob container URL for function app deployment storage (first container when containerNames is set).')
 output blobContainerURL string = !empty(containerNames)
   ? '${resStorage.outputs.primaryBlobEndpoint}${containerNames[0]}'
   : resStorage.outputs.primaryBlobEndpoint

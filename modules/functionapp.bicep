@@ -1,12 +1,26 @@
+metadata description = 'Linux Flex Consumption function app with blob deployment storage and user-assigned identity.'
+
+@description('Explicit function app name. When empty, a name is generated from namePrefix and the resource group id.')
 param functionAppName string = ''
+
+@description('Prefix used when generating the function app name (for example, fna).')
 param namePrefix string = 'fna'
+
+@description('Full ARM resource ID of the App Service plan (Flex Consumption, FC1).')
 param serverFarmResourceID string
+
+@description('Blob container URL used for deployment storage (account endpoint plus container name).')
 param blobContainerURL string
+
+@description('Full ARM resource ID of the user-assigned managed identity used for deployment storage and app identity.')
 param userAssignedResourceID string
+
+@description('When true, enables a system-assigned managed identity on the function app in addition to any user-assigned identities.')
 param isSystemAssigned bool = false
 
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
+@description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
 module functionApp 'br/public:avm/res/web/site:0.23.1' = {
   params: {
     name: vFunctionAppName
@@ -28,7 +42,7 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
         version: '3.13'
       }
       scaleAndConcurrency: {
-        maximumInstanceCount:2
+        maximumInstanceCount: 2
         instanceMemoryMB: 512
       }
     }
