@@ -22,7 +22,7 @@ module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1
     name: '${namePrefix}-identity'
   }
 }
-
+ 
 
 //function app requires we have some storage for triggers
 module storage '../modules/storage.bicep' = {
@@ -32,8 +32,16 @@ module storage '../modules/storage.bicep' = {
     storageSku: storagesku
     containerNames: ['${namePrefix}-app-container']
     blobPublicAccess: false
+    roleAssignments:[
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Contributor'
+      }
+    ]
   }
 }
+
 
 //create the app service plan (if required)
 module appPlan '../modules/appserviceplan.bicep' = {

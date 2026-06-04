@@ -1,7 +1,7 @@
 metadata description = 'Core storage account for shared blob data and artifacts.'
 
 @description('Prefix used in the storage account name (for example, jscorestorage).')
-param namePrefix string ='sa'
+param namePrefix string = 'sa'
 
 @description('Storage account name')
 param storageAccountName string = ''
@@ -18,19 +18,22 @@ param blobPublicAccess bool = false
 @description('Blob container names to create in the storage account.')
 param containerNames string[] = []
 
-
+param roleAssignments array = []
 
 @description('calculate a unique name for the storage account if the storageAccountName is empty')
-var vStorageAccountName = !empty(storageAccountName) ? storageAccountName : '${namePrefix}${uniqueString(resourceGroup().id)}'
+var vStorageAccountName = !empty(storageAccountName)
+  ? storageAccountName
+  : '${namePrefix}${uniqueString(resourceGroup().id)}'
 
 @description('StorageV2 account with public blob access disabled.')
 module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
   params: {
-    name:vStorageAccountName
+    name: vStorageAccountName
     allowBlobPublicAccess: blobPublicAccess
     kind: storageKind
     skuName: storageSku
     location: resourceGroup().location
+    roleAssignments: roleAssignments
   }
 }
 
@@ -40,10 +43,10 @@ output resStorageID string = resStorage.outputs.resourceId
 module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if (!empty(containerNames)) {
   params: {
     storageAccountName: resStorage.outputs.name
-    containers: [for name in containerNames: {
-      name: name
-    }]
+    containers: [
+      for name in containerNames: {
+        name: name
+      }
+    ]
   }
 }
-
-
