@@ -1,7 +1,7 @@
 metadata description = 'Core storage account for shared blob data and artifacts.'
 
 @description('Prefix used in the storage account name (for example, jscorestorage).')
-param namePrefix string
+param namePrefix string ='sa'
 
 @description('Storage account name')
 param storageAccountName string = ''
@@ -35,6 +35,7 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
 }
 
 output resStorageName string = resStorage.outputs.name
+output resStorageID string = resStorage.outputs.resourceId
 
 module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if (!empty(containerNames)) {
   params: {
@@ -44,3 +45,5 @@ module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = 
     }]
   }
 }
+
+
