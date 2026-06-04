@@ -6,7 +6,8 @@ param location string
 param subnetName string
 param vnetName string
 param vnetResourceGroup string
-
+param privateEndpointName string
+param functionAppName string
 
 //create our resource group
 @description('Resource group that hosts workload.')
@@ -66,7 +67,19 @@ resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01
 module privateEndpoint '../modules/privateendpoints.bicep' = {
   scope: resourceGroup
   params: {
+    privateEndpointName: privateEndpointName
     serviceID: storage.outputs.resStorageID
     subnetResourceID: privateLinkSubnet.id
+  }
+}
+
+
+module functionApp '../modules/functionapp.bicep' = {
+  scope: resourceGroup
+  params: {
+    functionAppName: functionAppName
+    blobContainerURL: storage.outputs.blobContainerURL
+    serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
+    userAssignedResourceID: identity.outputs.resourceId
   }
 }

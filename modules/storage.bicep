@@ -51,4 +51,6 @@ module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = 
   }
 }
 
-output blobContainerURL string = resStorage.outputs.primaryBlobEndpoint
+output blobContainerURL string = !empty(containerNames)
+  ? '${resStorage.outputs.primaryBlobEndpoint}${containerNames[0]}'
+  : resStorage.outputs.primaryBlobEndpoint

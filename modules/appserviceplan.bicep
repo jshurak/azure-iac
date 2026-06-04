@@ -11,3 +11,5 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.7.0' = {
     skuName: skuName
   }
 }
+
+output appServicePlanResourceID string = appServicePlan.outputs.resourceId
