@@ -35,7 +35,7 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-
+//create the app service plan (if required)
 module appPlan '../modules/appserviceplan.bicep' = {
   scope: resourceGroup
   params: {
@@ -44,7 +44,7 @@ module appPlan '../modules/appserviceplan.bicep' = {
 }
 
 
-//get network resources
+//get network resources. These exist in a different resource group
 resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: az.resourceGroup(vnetResourceGroup)
   name: vnetName
@@ -54,7 +54,7 @@ resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01
   name: subnetName
 }
 
-
+//create a private endpoint so the function app doesn't have to travel the public internet.
 module privateEndpoint '../modules/privateendpoints.bicep' = {
   scope: resourceGroup
   params: {
