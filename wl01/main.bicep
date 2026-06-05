@@ -79,7 +79,7 @@ module appPlan '../modules/appserviceplan.bicep' = {
     appServicePlanName: '${namePrefix}-appservice-plan'
   }
 }
-
+/*
 @description('Hub virtual network referenced for private link connectivity.')
 resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: az.resourceGroup(vnetResourceGroup)
@@ -101,16 +101,26 @@ module privateEndpoint '../modules/privateendpoints.bicep' = {
     subnetResourceID: privateLinkSubnet.id
   }
 }
+*/
+
+module appInsight '../modules/appinsight.bicep' = {
+  scope: resourceGroup
+  params: {
+    appInsightsName: '${namePrefix}-appinsights'
+  }
+}
 
 @description('Python Flex Consumption function app with identity-based deployment storage.')
 module functionApp '../modules/functionapp.bicep' = {
   scope: resourceGroup
   params: {
     functionAppName: functionAppName
+    storageAccountResourceID: storage.outputs.resStorageID
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
     blobContainerURL: storage.outputs.blobContainerURL
     serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
     userAssignedResourceID: identity.outputs.resourceId
+    appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
 }

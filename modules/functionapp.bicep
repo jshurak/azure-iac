@@ -21,6 +21,8 @@ param isSystemAssigned bool = false
 @description('Name of the storage account.')
 param storageAccountName string
 
+param storageAccountResourceID string = ''
+
 @description('Client ID of the user-assigned managed identity.')
 param userAssignedIdentityClientID string = ''
 
@@ -61,16 +63,17 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
     siteConfig: {
       alwaysOn: false
     }
+    configs: [
+      {
+        name: 'appsettings'
+        storageAccountResourceId: storageAccountResourceID // add this param
+        storageAccountUseIdentityAuthentication: true
+        properties: {
+          AzureWebJobsStorage__accountName: storageAccountName
+          AzureWebJobsStorage__credential: 'managedidentity'
+          AzureWebJobsStorage__clientId: userAssignedIdentityClientID
+        }
+      }
+    ]
   }
 }
-
-resource configAppSettings 'microsoft.web/sites/config@2022-09-01' = {
-  name: '${vFunctionAppName}/appsettings'
-  properties: {
-    AzureWebJobsStorage__accountName: storageAccountName
-    AzureWebJobsStorage__credential: 'managedidentity'
-    AzureWebJobsStorage__clientId: userAssignedIdentityClientID
-  }
-}
-
-

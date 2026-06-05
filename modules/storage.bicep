@@ -35,6 +35,13 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
     location: resourceGroup().location
     roleAssignments: roleAssignments
     allowSharedKeyAccess: false
+    blobServices: {
+      containers: [
+        {
+          name: containerNames[0]
+        }
+      ]
+    }
   }
 }
 
@@ -44,6 +51,7 @@ output resStorageName string = resStorage.outputs.name
 @description('Full ARM resource ID of the deployed storage account.')
 output resStorageID string = resStorage.outputs.resourceId
 
+/*
 module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if (!empty(containerNames)) {
   params: {
     storageAccountName: resStorage.outputs.name
@@ -54,7 +62,7 @@ module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = 
     ]
   }
 }
-
+*/
 @description('Blob container URL for function app deployment storage (first container when containerNames is set).')
 output blobContainerURL string = !empty(containerNames)
   ? '${resStorage.outputs.primaryBlobEndpoint}${containerNames[0]}'
