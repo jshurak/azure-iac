@@ -1,4 +1,4 @@
-name: iac-0unit-test
+name: iac-0-unit-test
 
 on:
   pull_request:
