@@ -36,7 +36,7 @@ jobs:
           type: deployment
           operation: validate
           scope: subscription
-          name: main
+          name: wl01-main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: wl01/main.bicep
@@ -49,7 +49,7 @@ jobs:
           type: deployment
           operation: whatIf
           scope: subscription
-          name: main
+          name: wl01-main
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: wl01/main.bicep
