@@ -1,4 +1,4 @@
-name: manual-deploy
+name: iac-0-manual-deploy
 
 on:
   workflow_dispatch:

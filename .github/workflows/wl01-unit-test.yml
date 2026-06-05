@@ -2,6 +2,8 @@ name: wl01-unit-test
 
 on:
   pull_request:
+    paths:
+      - 'wl01/**'
     branches:
     - main
 
