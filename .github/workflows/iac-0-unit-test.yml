@@ -2,6 +2,8 @@ name: iac-0-unit-test
 
 on:
   pull_request:
+    paths:
+      - 'azure-iac-0/**'
     branches:
     - main
 
