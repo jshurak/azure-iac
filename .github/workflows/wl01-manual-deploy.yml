@@ -1,4 +1,4 @@
-name: manual-deploy
+name: wl01-manual-deploy
 
 on:
   workflow_dispatch:
