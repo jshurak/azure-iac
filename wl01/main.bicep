@@ -1,5 +1,6 @@
+
 targetScope = 'subscription'
-metadata description = 'Workload landing zone: resource group, identity, storage, private endpoint, App Service plan, and function app.'
+metadata description = 'Creates an Azure function app on a Flex Consumption plan. required storage acccount as well as application insights.'
 
 @description('Prefix applied to workload resource names (for example, wl01-rg, wl01stacc).')
 param namePrefix string
