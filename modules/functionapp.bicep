@@ -6,8 +6,8 @@ param functionAppName string = ''
 @description('Prefix used when generating the function app name (for example, fna).')
 param namePrefix string = 'wl01'
 
-//@description('Full ARM resource ID of the App Service plan (Flex Consumption, FC1).')
-//param serverFarmResourceID string
+@description('Full ARM resource ID of the App Service plan (Flex Consumption, FC1).')
+param serverFarmResourceID string
 
 @description('Blob container URL used for deployment storage (account endpoint plus container name).')
 param blobContainerURL string
@@ -34,7 +34,7 @@ var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix
 
 
 
-
+/*
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name:  '${namePrefix}-appservice-plan'
   location: resourceGroup().location
@@ -47,7 +47,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
     reserved: true
   }
 }
-
+*/
 
 
 
@@ -57,7 +57,7 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
   params: {
     name: vFunctionAppName
     kind: 'functionapp'
-    serverFarmResourceId: appServicePlan.id
+    serverFarmResourceId: serverFarmResourceID
     functionAppConfig: {
       deployment: {
         storage: {

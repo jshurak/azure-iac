@@ -62,7 +62,7 @@ module storage '../modules/storage.bicep' = {
 }
 
 
-/*
+
 @description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
   scope: resourceGroup
@@ -71,7 +71,7 @@ module appPlan '../modules/appserviceplan.bicep' = {
   }
 }
 
-*/
+
 
 
 module appInsight '../modules/appinsight.bicep' = {
@@ -90,7 +90,7 @@ module functionApp '../modules/functionapp.bicep' = {
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
     blobContainerURL: storage.outputs.blobContainerURL
-    //serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
+    serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
     userAssignedResourceID: identity.outputs.resourceId
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
