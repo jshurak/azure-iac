@@ -34,6 +34,7 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
     skuName: storageSku
     location: resourceGroup().location
     roleAssignments: roleAssignments
+    allowSharedKeyAccess: false
   }
 }
 

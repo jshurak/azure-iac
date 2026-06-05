@@ -18,6 +18,12 @@ param userAssignedResourceID string
 @description('When true, enables a system-assigned managed identity on the function app in addition to any user-assigned identities.')
 param isSystemAssigned bool = false
 
+@description('Name of the storage account.')
+param storageAccountName string
+
+@description('Client ID of the user-assigned managed identity.')
+param userAssignedIdentityClientID string = ''
+
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
 @description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
@@ -57,3 +63,14 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
     }
   }
 }
+
+resource configAppSettings 'microsoft.web/sites/config@2022-09-01' = {
+  name: '${vFunctionAppName}/appsettings'
+  properties: {
+    AzureWebJobsStorage__accountName: storageAccountName
+    AzureWebJobsStorage__credential: 'managedidentity'
+    AzureWebJobsStorage__clientId: userAssignedIdentityClientID
+  }
+}
+
+

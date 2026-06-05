@@ -53,6 +53,21 @@ module storage '../modules/storage.bicep' = {
         principalType: 'ServicePrincipal'
         roleDefinitionIdOrName: 'Storage Blob Data Contributor'
       }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Owner'
+      }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Table Data Contributor'
+      }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Queue Data Contributor'
+      }
     ]
   }
 }
@@ -92,6 +107,8 @@ module functionApp '../modules/functionapp.bicep' = {
   scope: resourceGroup
   params: {
     functionAppName: functionAppName
+    storageAccountName: storage.outputs.resStorageName
+    userAssignedIdentityClientID: identity.outputs.clientId
     blobContainerURL: storage.outputs.blobContainerURL
     serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
     userAssignedResourceID: identity.outputs.resourceId
