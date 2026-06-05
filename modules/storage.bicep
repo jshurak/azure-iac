@@ -42,6 +42,11 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
         }
       ]
     }
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
   }
 }
 
@@ -51,18 +56,6 @@ output resStorageName string = resStorage.outputs.name
 @description('Full ARM resource ID of the deployed storage account.')
 output resStorageID string = resStorage.outputs.resourceId
 
-/*
-module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = if (!empty(containerNames)) {
-  params: {
-    storageAccountName: resStorage.outputs.name
-    containers: [
-      for name in containerNames: {
-        name: name
-      }
-    ]
-  }
-}
-*/
 
 @description('Blob container URL for function app deployment storage (first container when containerNames is set).')
 output blobContainerURL string = !empty(containerNames)
