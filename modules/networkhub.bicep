@@ -42,5 +42,8 @@ module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
 }
 
 
+@description('ARM resource IDs of subnets created in the hub virtual network.')
 output subnetIDs array = hubNetwork.outputs.subnetResourceIds
+
+@description('Names of subnets created in the hub virtual network.')
 output subnetNames array = hubNetwork.outputs.subnetNames
