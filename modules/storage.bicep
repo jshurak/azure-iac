@@ -25,6 +25,11 @@ var vStorageAccountName = !empty(storageAccountName)
   ? storageAccountName
   : '${namePrefix}${uniqueString(resourceGroup().id)}'
 
+// Bicep requires the loop body object on the same line as the for-expression colon.
+var blobContainers = [for name in containerNames: {
+  name: name
+}]
+
 @description('StorageV2 account with public blob access disabled.')
 module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
   params: {
@@ -35,13 +40,9 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
     location: resourceGroup().location
     roleAssignments: roleAssignments
     allowSharedKeyAccess: true
-    blobServices: {
-      containers: [
-        {
-          name: containerNames[0]
-        }
-      ]
-    }
+    blobServices: !empty(containerNames) ? {
+      containers: blobContainers
+    } : null
     publicNetworkAccess: 'Enabled'
     networkAcls: {
       bypass: 'AzureServices'
