@@ -4,10 +4,10 @@ metadata description = 'Linux Flex Consumption function app with blob deployment
 param functionAppName string = ''
 
 @description('Prefix used when generating the function app name (for example, fna).')
-param namePrefix string = 'fna'
+param namePrefix string = 'wl01'
 
-@description('Full ARM resource ID of the App Service plan (Flex Consumption, FC1).')
-param serverFarmResourceID string
+//@description('Full ARM resource ID of the App Service plan (Flex Consumption, FC1).')
+//param serverFarmResourceID string
 
 @description('Blob container URL used for deployment storage (account endpoint plus container name).')
 param blobContainerURL string
@@ -26,14 +26,38 @@ param storageAccountResourceID string = ''
 @description('Client ID of the user-assigned managed identity.')
 param userAssignedIdentityClientID string = ''
 
+@description('Instrumentation key of the deployed App Insights.')
+param appInsightInstrumentationKey string = ''
+
+
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
+
+
+
+
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
+  name:  '${namePrefix}-appservice-plan'
+  location: resourceGroup().location
+  kind: 'functionapp'
+  sku: {
+    tier: 'FlexConsumption'
+    name: 'FC1'
+  }
+  properties: {
+    reserved: true
+  }
+}
+
+
+
+
 
 @description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
 module functionApp 'br/public:avm/res/web/site:0.23.1' = {
   params: {
     name: vFunctionAppName
     kind: 'functionapp'
-    serverFarmResourceId: serverFarmResourceID
+    serverFarmResourceId: appServicePlan.id
     functionAppConfig: {
       deployment: {
         storage: {
@@ -72,6 +96,8 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
           AzureWebJobsStorage__accountName: storageAccountName
           AzureWebJobsStorage__credential: 'managedidentity'
           AzureWebJobsStorage__clientId: userAssignedIdentityClientID
+          APPINSIGHTS_INSTRUMENTATIONKEY: appInsightInstrumentationKey
+          APPLICATIONINSIGHTS_AUTHENTICATION_STRING: 'ClientId=${userAssignedIdentityClientID};Authorization=AAD'
         }
       }
     ]

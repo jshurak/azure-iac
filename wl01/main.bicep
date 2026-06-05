@@ -10,17 +10,6 @@ param storagesku string
 @description('Azure region for the workload resource group and deployed resources.')
 param location string
 
-@description('Name of the subnet used for private endpoints in the hub virtual network.')
-param subnetName string
-
-@description('Name of the existing hub virtual network that contains the private link subnet.')
-param vnetName string
-
-@description('Resource group that contains the hub virtual network.')
-param vnetResourceGroup string
-
-@description('Name of the private endpoint for blob storage access.')
-param privateEndpointName string
 
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
@@ -72,6 +61,8 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
+
+/*
 @description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
   scope: resourceGroup
@@ -79,29 +70,9 @@ module appPlan '../modules/appserviceplan.bicep' = {
     appServicePlanName: '${namePrefix}-appservice-plan'
   }
 }
-/*
-@description('Hub virtual network referenced for private link connectivity.')
-resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
-  scope: az.resourceGroup(vnetResourceGroup)
-  name: vnetName
-}
 
-@description('Subnet in the hub VNet where the storage private endpoint is placed.')
-resource privateLinkSubnet 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = {
-  parent: vnet
-  name: subnetName
-}
-
-@description('Private endpoint so the function app reaches blob storage over the private network.')
-module privateEndpoint '../modules/privateendpoints.bicep' = {
-  scope: resourceGroup
-  params: {
-    privateEndpointName: privateEndpointName
-    serviceID: storage.outputs.resStorageID
-    subnetResourceID: privateLinkSubnet.id
-  }
-}
 */
+
 
 module appInsight '../modules/appinsight.bicep' = {
   scope: resourceGroup
@@ -119,7 +90,7 @@ module functionApp '../modules/functionapp.bicep' = {
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
     blobContainerURL: storage.outputs.blobContainerURL
-    serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
+    //serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
     userAssignedResourceID: identity.outputs.resourceId
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }

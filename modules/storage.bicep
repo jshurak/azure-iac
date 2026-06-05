@@ -34,7 +34,7 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
     skuName: storageSku
     location: resourceGroup().location
     roleAssignments: roleAssignments
-    allowSharedKeyAccess: false
+    allowSharedKeyAccess: true
     blobServices: {
       containers: [
         {
@@ -63,6 +63,7 @@ module resBlob 'br/public:avm/res/storage/storage-account/blob-service:0.1.0' = 
   }
 }
 */
+
 @description('Blob container URL for function app deployment storage (first container when containerNames is set).')
 output blobContainerURL string = !empty(containerNames)
   ? '${resStorage.outputs.primaryBlobEndpoint}${containerNames[0]}'
