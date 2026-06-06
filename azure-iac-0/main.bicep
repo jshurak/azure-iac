@@ -20,6 +20,8 @@ param ipAddressSpace string
 @description('CIDR suffix for the hub VNet, including the leading slash (for example, /16).')
 param CIDR string
 
+param ownerName string
+
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-core-rg'
@@ -36,6 +38,26 @@ module coreVNet '../modules/networkhub.bicep' = {
     namePrefix: namePrefix
   }
 }
+
+
+@description('Private dns zone for our production environment.')
+module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: coreResourceGroup
+  params: {
+    name: '${namePrefix}-company.com'
+    location: 'global'
+    lock: {
+      kind: 'CanNotDelete'
+      name: 'NoDisassemble'
+    }
+    tags: {
+      Environment: 'Prod'
+      Owner: ownerName
+      
+    }
+  }
+}
+
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
