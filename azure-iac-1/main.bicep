@@ -55,7 +55,7 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
 }
 
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
+  scope: resourceGroup(dnsResourceGroup)
   params: {
     name: '${networkName}-dns-link'
     privateDnsZoneName: privateDNSZone.name
