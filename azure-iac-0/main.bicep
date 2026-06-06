@@ -93,6 +93,6 @@ module coreStorage '../modules/storage.bicep' = {
   params: {
     namePrefix: namePrefix
     storageSku: storageSku
-    storageAccountName: '${namePrefix}corestorage'
+    storageAccountName: '${namePrefix}${location}corestorage'
   }
 }
