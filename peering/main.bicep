@@ -14,7 +14,7 @@ module networkPeering '../modules/networkpeering.bicep' = [
       net1NetworkName: hubNetworkName
       net2ResourceGroup: spoke.value
       net2NetworkName: spoke.key
-      isHubandSpoke: true
+      allowGatewayTransit: true
     }
   }
 ]
