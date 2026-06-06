@@ -65,9 +65,10 @@ module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: coreResourceGroup
   params: {
+    name: '${networkName}-dns-link'
     privateDnsZoneName: privateDNSZone.outputs.name
     virtualNetworkResourceId: coreVNet.outputs.hubNetworkResourceID
-    location: location
+    location: 'global'
     registrationEnabled: true
     tags: {
       Environment: 'Prod'
@@ -80,7 +81,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
-    location: 'global'
+    location: 'location'
     namePrefix: namePrefix
   }
 }
