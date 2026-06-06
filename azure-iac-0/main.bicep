@@ -58,6 +58,13 @@ module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   }
 }
 
+module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: coreResourceGroup
+  params: {
+    privateDnsZoneName: privateDNSZone.outputs.name
+    virtualNetworkResourceId: coreVNet.outputs.hubNetworkResourceID
+  }
+}
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
