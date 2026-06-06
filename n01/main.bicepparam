@@ -8,3 +8,6 @@ param networkName = '${namePrefix}-${location}-vnet'
 param subnets = {
   workload: '24'
 }
+param privateDNSZoneName = 'js-company.com'
+param globalResourceGroup = 'js-core-rg'
+param ownerName = 'Jeff Shurak'
