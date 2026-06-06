@@ -23,7 +23,12 @@ param CIDR string
 @description('Name of the hub virtual network.')
 param networkName string
 
+@description('Resource group that hosts the resources.')
 param ownerName string
+
+@description('Resource group that hosts the private dns zone.')
+param dnsResourceGroup string
+
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -44,30 +49,16 @@ module coreVNet '../modules/virtualnetwork.bicep' = {
   }
 }
 
-
-@description('Private dns zone for our production environment.')
-module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${namePrefix}-company.com'
-    location: 'global'
-    lock: {
-      kind: 'CanNotDelete'
-      name: 'NoDisassemble'
-    }
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-      
-    }
-  }
+resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  scope: resourceGroup(dnsResourceGroup)
+  name: '${namePrefix}-company.com'
 }
 
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: coreResourceGroup
   params: {
     name: '${networkName}-dns-link'
-    privateDnsZoneName: privateDNSZone.outputs.name
+    privateDnsZoneName: privateDNSZone.name
     virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
     location: 'global'
     registrationEnabled: true
