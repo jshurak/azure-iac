@@ -80,7 +80,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
-    location: location
+    location: 'global'
     namePrefix: namePrefix
   }
 }
