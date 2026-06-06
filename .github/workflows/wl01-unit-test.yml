@@ -60,6 +60,7 @@ jobs:
         id:  checkov
         uses: bridgecrewio/checkov-action@master
         with:
+          directory: wl01/
           skip_check: CKV_AZURE_178 #skipping this check as it is currently yielding false positives
           framework: bicep
       - name: Upload SARIF --file
