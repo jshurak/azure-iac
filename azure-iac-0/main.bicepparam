@@ -1,7 +1,7 @@
 using './main.bicep'
 
 param namePrefix = 'js'
-param location = 'eastus2'
+param location = 'us-east-2'
 
 param ipAddressSpace = '10.0.0.0'
 param CIDR = '/16'
