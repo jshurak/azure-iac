@@ -23,8 +23,8 @@ param subnets object = {}
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
 var vnetAddressPrefix = '${ipAddressSpace}${CIDR}'
 
-
-var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-hub-vnet'
+@description('creates a default network name if one is not provided..')
+var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-${location}-vnet'
 
 
 @description('Hub virtual network from Azure Verified Modules (AVM).')
