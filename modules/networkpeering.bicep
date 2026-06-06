@@ -1,0 +1,36 @@
+metadata description = 'Creates a peering between a net1 and a net2 virtual network. requires both networks to exist.'
+
+param net1ResourceGroup string
+param net1NetworkName string
+param net2ResourceGroup string
+param net2NetworkName string
+param isHubandSpoke bool = false
+
+var allowGatewayTransit = isHubandSpoke ? true : false
+
+resource net1Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
+  scope: resourceGroup(net1ResourceGroup)
+  name: net1NetworkName
+}
+
+resource net2Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
+  scope: resourceGroup(net2ResourceGroup)
+  name: net2NetworkName
+}
+
+module net1ToNet2Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
+  params: {
+    name: '${net1NetworkName}-to-${net2NetworkName}-peering'
+    localVnetName: net1NetworkName
+    remoteVirtualNetworkResourceId: net2Network.id
+    allowGatewayTransit: allowGatewayTransit
+  }
+}
+
+module net2ToNet1Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
+  params: {
+    name: '${net2NetworkName}-to-${net1NetworkName}-peering'
+    localVnetName: net2NetworkName
+    remoteVirtualNetworkResourceId: net1Network.id
+  }
+}
