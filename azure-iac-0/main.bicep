@@ -27,14 +27,15 @@ param ownerName string
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: '${namePrefix}-core-rg'
+  name: '${namePrefix}-${location}-core-rg'
   location: location
 }
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../modules/networkhub.bicep' = {
+module coreVNet '../modules/virtualnetwork.bicep' = {
   scope: coreResourceGroup
   params:{
+    networkType: 'hub'
     networkName: networkName
     location: location
     CIDR: CIDR
@@ -67,7 +68,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
   params: {
     name: '${networkName}-dns-link'
     privateDnsZoneName: privateDNSZone.outputs.name
-    virtualNetworkResourceId: coreVNet.outputs.hubNetworkResourceID
+    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
     location: 'global'
     registrationEnabled: true
     tags: {
@@ -92,6 +93,6 @@ module coreStorage '../modules/storage.bicep' = {
   params: {
     namePrefix: namePrefix
     storageSku: storageSku
-    storageAccountName: '${namePrefix}corestorage'
+    storageAccountName: '${namePrefix}${location}corestorage'
   }
 }
