@@ -37,7 +37,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
-          location: eastus2
+          location: centralus
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
         with:
@@ -49,7 +49,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
-          location: eastus2
+          location: centralus
   deploy:
     runs-on: ubuntu-latest
     environment: production
@@ -76,4 +76,4 @@ jobs:
           parameters-file: azure-iac-1/main.bicepparam
           action-on-unmanage-resources: delete
           deny-settings-mode: none
-          location: eastus2
+          location: centralus

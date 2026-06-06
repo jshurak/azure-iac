@@ -45,7 +45,7 @@ jobs:
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
-          location: eastus2
+          location: centralus
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
         with:
@@ -58,7 +58,7 @@ jobs:
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
-          location: eastus2
+          location: centralus
   deploy:
     runs-on: ubuntu-latest
     environment: production
@@ -86,4 +86,4 @@ jobs:
           #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
           action-on-unmanage-resources: delete
           deny-settings-mode: none
-          location: eastus2
+          location: centralus
