@@ -1,18 +1,20 @@
-metadata description = 'Creates a peering between a hub and a spoke virtual networks.'
-
-
-param hubNetworkName string
-param spokeNetworkNames object
-
+targetScope = 'subscription'
 param hubResourceGroup string
+param hubNetworkName string
+param spokeNetworks object
 
 
-resource hubNetwork 'Microsoft.Network/virtualNetworks@2024-06-01' existing = {
-  scope: resourceGroup(hubResourceGroup)
-  name: hubNetworkName
-}
 
-resource spokeNetwork 'Microsoft.Network/virtualNetworks@2024-06-01' existing = {
-  scope: resourceGroup(spokeResourceGroup)
-  name: spokeNetworkName
-}
+@description('Creates a peering between the hub and each spoke network.')
+module networkPeering '../modules/networkpeering.bicep' = [
+  for spoke in items(spokeNetworks): {
+    scope: subscription()
+    params: {
+      net1ResourceGroup: hubResourceGroup
+      net1NetworkName: hubNetworkName
+      net2ResourceGroup: spoke.key
+      net2NetworkName: spoke.value
+      isHubandSpoke: true
+    }
+  }
+]
