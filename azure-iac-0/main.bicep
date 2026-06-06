@@ -23,6 +23,7 @@ param CIDR string
 @description('Name of the hub virtual network.')
 param networkName string
 
+@description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
 param ownerName string
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')

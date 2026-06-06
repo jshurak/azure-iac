@@ -21,6 +21,7 @@ param isSystemAssigned bool = false
 @description('Name of the storage account.')
 param storageAccountName string
 
+@description('Full ARM resource ID of the storage account used for AzureWebJobsStorage configuration.')
 param storageAccountResourceID string = ''
 
 @description('Client ID of the user-assigned managed identity.')
