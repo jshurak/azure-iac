@@ -7,3 +7,6 @@ param ipAddressSpace = '10.0.0.0'
 param CIDR = '/16'
 
 param storageSku = 'Standard_LRS'
+
+
+param ownerName = 'Jeff Shurak'
