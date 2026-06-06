@@ -1,3 +1,4 @@
+targetScope = 'subscription'
 metadata description = 'Creates a peering between a net1 and a net2 virtual network. requires both networks to exist.'
 
 param net1ResourceGroup string
@@ -19,6 +20,7 @@ resource net2Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
 }
 
 module net1ToNet2Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
+  scope: resourceGroup(net1ResourceGroup)
   params: {
     name: '${net1NetworkName}-to-${net2NetworkName}-peering'
     localVnetName: net1NetworkName
@@ -28,6 +30,7 @@ module net1ToNet2Peering 'br/public:avm/res/network/virtual-network/virtual-netw
 }
 
 module net2ToNet1Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
+  scope: resourceGroup(net2ResourceGroup)
   params: {
     name: '${net2NetworkName}-to-${net1NetworkName}-peering'
     localVnetName: net2NetworkName
