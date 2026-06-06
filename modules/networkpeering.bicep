@@ -5,9 +5,7 @@ param net1ResourceGroup string
 param net1NetworkName string
 param net2ResourceGroup string
 param net2NetworkName string
-param isHubandSpoke bool = false
-
-var allowGatewayTransit = isHubandSpoke ? true : false
+param allowGatewayTransit bool = false
 
 resource net1Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
   scope: resourceGroup(net1ResourceGroup)
