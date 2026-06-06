@@ -1,0 +1,89 @@
+name: peering-lint-validate-deploy-infrastructure
+
+on:
+  push:
+    paths:
+      - 'peering/**'
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+defaults:
+  run:
+    working-directory: peering/
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Bicep linter
+        run: az bicep build --file ./main.bicep
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Validate Bicep Template
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deployment
+          operation: validate
+          scope: subscription
+          name: peering-main
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          template-file: peering/main.bicep
+          parameters-file: peering/main.bicepparam
+          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          location: eastus2
+      - name: What-if Preview
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deployment
+          operation: whatIf
+          scope: subscription
+          name: peering-main
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ vars.AZURE_RESOURCE_GROUP_NAME }}
+          template-file: peering/main.bicep
+          parameters-file: peering/main.bicepparam
+          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          location: eastus2
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: [lint, validate]
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Deploy to Azure
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deploymentStack
+          operation: create
+          scope: subscription
+          name: peering-main
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          template-file: peering/main.bicep
+          parameters-file: peering/main.bicepparam
+          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          action-on-unmanage-resources: delete
+          deny-settings-mode: none
+          location: eastus2
