@@ -20,6 +20,9 @@ param ipAddressSpace string
 @description('CIDR suffix for the hub VNet, including the leading slash (for example, /16).')
 param CIDR string
 
+@description('Name of the hub virtual network.')
+param networkName string
+
 param ownerName string
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
@@ -32,6 +35,7 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 module coreVNet '../modules/networkhub.bicep' = {
   scope: coreResourceGroup
   params:{
+    networkName: networkName
     location: location
     CIDR: CIDR
     ipAddressSpace: ipAddressSpace 
@@ -63,6 +67,12 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
   params: {
     privateDnsZoneName: privateDNSZone.outputs.name
     virtualNetworkResourceId: coreVNet.outputs.hubNetworkResourceID
+    location: location
+    registrationEnabled: true
+    tags: {
+      Environment: 'Prod'
+      Owner: ownerName
+    }
   }
 }
 

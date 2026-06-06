@@ -10,3 +10,6 @@ param storageSku = 'Standard_LRS'
 
 
 param ownerName = 'Jeff Shurak'
+
+
+param networkName = '${namePrefix}-hub-vnet'

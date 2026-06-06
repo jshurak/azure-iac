@@ -14,6 +14,9 @@ param ipAddressSpace string
 @description('CIDR suffix for the VNet, including leading slash (e.g. /16).')
 param CIDR string
 
+@description('Name of the hub virtual network.')
+param networkName string 
+
 @description('Subnets to create. Keys are subnet names; values are prefix lengths (newCIDR) passed to cidrSubnet().')
 param subnets object = {
   Firewall: '26'
@@ -25,10 +28,14 @@ param subnets object = {
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
 var vnetAddressPrefix = '${ipAddressSpace}${CIDR}'
 
+
+var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-hub-vnet'
+
+
 @description('Hub virtual network from Azure Verified Modules (AVM).')
 module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
   params: {
-    name: '${namePrefix}-hub-vnet'
+    name: vNetworkName
     location: location
     addressPrefixes: [
       vnetAddressPrefix
