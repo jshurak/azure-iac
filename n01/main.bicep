@@ -7,7 +7,7 @@ param networkName string
 param subnets object
 param privateDNSZoneName string
 param globalResourceGroup string
-
+param hubNetworkName string
 param ownerName string
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
@@ -28,6 +28,13 @@ module spokeNetwork '../modules/networkspoke.bicep' = {
   }
 }
 
+//grab our hub network resource
+@description('hub network resource for our production environment.')
+resource hubNetwork 'Microsoft.Network/virtualNetworks@2024-06-01' existing = {
+  scope: resourceGroup(globalResourceGroup)
+  name: hubNetworkName
+}
+
 //need to grab our existing private dns zone from the core resource group
 @description('private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
@@ -35,6 +42,7 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
   name: privateDNSZoneName
 }
 
+//child of private dns, so needs to reside in same resource group as private dns
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(globalResourceGroup)
   params: {
@@ -47,5 +55,16 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
       Environment: 'Prod'
       Owner: ownerName
     }
+  }
+}
+
+
+//create peering between hub and spoke
+module spokePeering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
+  scope: coreResourceGroup
+  params: {
+    name: '${spokeNetwork.name}-to-${hubNetwork.name}-peering'
+    localVnetName: spokeNetwork.name
+    remoteVirtualNetworkResourceId: hubNetwork.id
   }
 }

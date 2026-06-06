@@ -11,3 +11,4 @@ param subnets = {
 param privateDNSZoneName = 'js-company.com'
 param globalResourceGroup = 'js-core-rg'
 param ownerName = 'Jeff Shurak'
+param hubNetworkName = 'js-hub-vnet'
