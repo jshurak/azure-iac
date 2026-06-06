@@ -51,6 +51,8 @@ output subnetIDs array = spokeNetwork.outputs.subnetResourceIds
 @description('Names of subnets created in the hub virtual network.')
 output subnetNames array = spokeNetwork.outputs.subnetNames
 
-
 @description('Full ARM resource ID of the deployed hub virtual network.')
 output spokeNetworkResourceID string = spokeNetwork.outputs.resourceId
+
+@description('Name of the deployed spoke virtual network.')
+output spokeNetworkName string = spokeNetwork.outputs.name

@@ -64,7 +64,7 @@ module spokePeering 'br/public:avm/res/network/virtual-network/virtual-network-p
   scope: coreResourceGroup
   params: {
     name: '${spokeNetwork.name}-to-${hubNetwork.name}-peering'
-    localVnetName: spokeNetwork.name
+    localVnetName: spokeNetwork.outputs.spokeNetworkName
     remoteVirtualNetworkResourceId: hubNetwork.id
   }
 }
