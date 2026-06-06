@@ -18,22 +18,17 @@ param CIDR string
 param networkName string 
 
 @description('Subnets to create. Keys are subnet names; values are prefix lengths (newCIDR) passed to cidrSubnet().')
-param subnets object = {
-  Firewall: '26'
-  Gateway: '26'
-  Bastion: '26'
-  PrivateLink: '24'
-}
+param subnets object 
 
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
 var vnetAddressPrefix = '${ipAddressSpace}${CIDR}'
 
-
-var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-hub-vnet'
+@description('creates a default network name if one is not provided..')
+var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-${location}-vnet'
 
 
 @description('Hub virtual network from Azure Verified Modules (AVM).')
-module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
+module spokeNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
   params: {
     name: vNetworkName
     location: location
@@ -51,14 +46,13 @@ module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
 
 
 @description('ARM resource IDs of subnets created in the hub virtual network.')
-output subnetIDs array = hubNetwork.outputs.subnetResourceIds
+output subnetIDs array = spokeNetwork.outputs.subnetResourceIds
 
 @description('Names of subnets created in the hub virtual network.')
-output subnetNames array = hubNetwork.outputs.subnetNames
-
+output subnetNames array = spokeNetwork.outputs.subnetNames
 
 @description('Full ARM resource ID of the deployed hub virtual network.')
-output hubNetworkResourceID string = hubNetwork.outputs.resourceId
+output spokeNetworkResourceID string = spokeNetwork.outputs.resourceId
 
-@description('Name of the deployed hub virtual network.')
-output hubNetworkName string = hubNetwork.outputs.name
+@description('Name of the deployed spoke virtual network.')
+output spokeNetworkName string = spokeNetwork.outputs.name
