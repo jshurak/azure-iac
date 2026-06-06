@@ -28,7 +28,7 @@ module spokeNetwork '../modules/networkspoke.bicep' = {
   }
 }
 
-
+//need to grab our existing private dns zone from the core resource group
 @description('private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(globalResourceGroup)
@@ -36,7 +36,7 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
 }
 
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
+  scope: resourceGroup(globalResourceGroup)
   params: {
     name: '${networkName}-dns-link'
     privateDnsZoneName: privateDNSZone.name
