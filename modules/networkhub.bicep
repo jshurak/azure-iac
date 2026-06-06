@@ -47,3 +47,7 @@ output subnetIDs array = hubNetwork.outputs.subnetResourceIds
 
 @description('Names of subnets created in the hub virtual network.')
 output subnetNames array = hubNetwork.outputs.subnetNames
+
+
+@description('Full ARM resource ID of the deployed hub virtual network.')
+output hubNetworkResourceID string = hubNetwork.outputs.resourceId
