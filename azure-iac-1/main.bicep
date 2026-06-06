@@ -23,7 +23,7 @@ param CIDR string
 @description('Name of the hub virtual network.')
 param networkName string
 
-@description('Resource group that hosts the resources.')
+@description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
 param ownerName string
 
 @description('Resource group that hosts the private dns zone.')

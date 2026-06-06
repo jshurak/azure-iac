@@ -1,5 +1,10 @@
+@description('Explicit Log Analytics workspace name. When empty, a name is generated from namePrefix.')
 param logAnalyticsName string = ''
+
+@description('Explicit Application Insights resource name. When empty, a name is generated from namePrefix.')
 param appInsightsName string = ''
+
+@description('Prefix used when generating Log Analytics and Application Insights names (for example, wl01).')
 param namePrefix string = 'wl01'
 
 var vLogAnalyticsName = !empty(logAnalyticsName) ? logAnalyticsName : '${namePrefix}-loganalytics'

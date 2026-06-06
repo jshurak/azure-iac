@@ -21,6 +21,7 @@ param isSystemAssigned bool = false
 @description('Name of the storage account.')
 param storageAccountName string
 
+@description('Full ARM resource ID of the storage account used for AzureWebJobsStorage configuration.')
 param storageAccountResourceID string = ''
 
 @description('Client ID of the user-assigned managed identity.')
@@ -31,25 +32,6 @@ param appInsightInstrumentationKey string = ''
 
 
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
-
-
-
-/*
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name:  '${namePrefix}-appservice-plan'
-  location: resourceGroup().location
-  kind: 'functionapp'
-  sku: {
-    tier: 'FlexConsumption'
-    name: 'FC1'
-  }
-  properties: {
-    reserved: true
-  }
-}
-*/
-
-
 
 
 @description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
