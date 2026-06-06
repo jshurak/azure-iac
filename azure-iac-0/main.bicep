@@ -83,7 +83,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
     location: location
-    namePrefix: namePrefix
+    namePrefix: '${namePrefix}-${location}'
   }
 }
 
