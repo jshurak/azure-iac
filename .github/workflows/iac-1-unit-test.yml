@@ -1,0 +1,71 @@
+name: iac-1-unit-test
+
+on:
+  pull_request:
+    paths:
+      - 'azure-iac-1/**'
+    branches:
+    - main
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Bicep linter
+        run: az bicep build --file azure-iac-1/main.bicep
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Validate Bicep Template
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deployment
+          operation: validate
+          scope: subscription
+          name: centralus-main
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          template-file: azure-iac-1/main.bicep
+          parameters-file: azure-iac-1/main.bicepparam
+          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          location: centralus
+      - name: What-if Preview
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deployment
+          operation: whatIf
+          scope: subscription
+          name: centralus-main
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+          template-file: azure-iac-1/main.bicep
+          parameters-file: azure-iac-1/main.bicepparam
+          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          location: centralus
+      - name: Run Checkov actions/checkout
+        id:  checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: azure-iac-1/
+          skip_check: CKV_AZURE_178 #skipping this check as it is currently yielding false positives
+          framework: bicep
+      - name: Upload SARIF --file
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif
+          category: checkov
