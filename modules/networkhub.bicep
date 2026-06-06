@@ -44,6 +44,7 @@ module hubNetwork 'br/public:avm/res/network/virtual-network:0.9.0' = {
     subnets: [for (subnet, i) in items(subnets): {
       name: '${subnet.key}-subnet'
       addressPrefix: cidrSubnet(vnetAddressPrefix, int(subnet.value), i)
+      privateEndpointNetworkPolicies: 'Enabled'
     }]
   }
 }
