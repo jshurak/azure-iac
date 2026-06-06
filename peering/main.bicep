@@ -12,8 +12,8 @@ module networkPeering '../modules/networkpeering.bicep' = [
     params: {
       net1ResourceGroup: hubResourceGroup
       net1NetworkName: hubNetworkName
-      net2ResourceGroup: spoke.key
-      net2NetworkName: spoke.value
+      net2ResourceGroup: spoke.value
+      net2NetworkName: spoke.key
       isHubandSpoke: true
     }
   }
