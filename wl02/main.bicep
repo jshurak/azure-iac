@@ -25,7 +25,7 @@ param ownerName string = 'Jeff Shurak'
 @description('Private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(dnsResourceGroupName)
-  name: '${namePrefix}-company.com'
+  name: 'js-company.com'
 }
 
 @description('Resource group that hosts the workload.')
