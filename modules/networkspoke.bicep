@@ -18,7 +18,7 @@ param CIDR string
 param networkName string 
 
 @description('Subnets to create. Keys are subnet names; values are prefix lengths (newCIDR) passed to cidrSubnet().')
-param subnets object = {}
+param subnets object 
 
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
 var vnetAddressPrefix = '${ipAddressSpace}${CIDR}'
