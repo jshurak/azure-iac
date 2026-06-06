@@ -34,25 +34,6 @@ param appInsightInstrumentationKey string = ''
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
 
-
-/*
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name:  '${namePrefix}-appservice-plan'
-  location: resourceGroup().location
-  kind: 'functionapp'
-  sku: {
-    tier: 'FlexConsumption'
-    name: 'FC1'
-  }
-  properties: {
-    reserved: true
-  }
-}
-*/
-
-
-
-
 @description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
 module functionApp 'br/public:avm/res/web/site:0.23.1' = {
   params: {
