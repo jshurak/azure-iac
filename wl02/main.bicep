@@ -25,7 +25,7 @@ param storagesku string = 'Standard_LRS'
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
 
-
+//any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -123,6 +123,15 @@ module storage '../modules/storage.bicep' = {
     ]
   }
 }
+//private endpoint for the storage
+module privateEndpoint '../modules/privateendpoints.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    serviceID: storage.outputs.resStorageID
+    subnetResourceID: wlNetwork.outputs.subnetIDs[0]
+    groupIds: ['blob','file','queue','table']
+  }
+}
 //end storage account buildout
 
 
@@ -135,6 +144,7 @@ module appInsight '../modules/appinsight.bicep' = {
 }
 //end app insight and log analytics workspace buildout
 
+/*
 
 @description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
@@ -159,3 +169,4 @@ module functionApp '../modules/functionapp.bicep' = {
   }
 }
 //build the app service and Function App
+*/

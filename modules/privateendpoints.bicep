@@ -12,6 +12,7 @@ param namePrefix string = 'pe'
 @description('Full ARM resource ID of the target service (for example, a storage account).')
 param serviceID string
 
+@description('Group IDs for the private endpoint. This is the subresource, ie storage would be blob.file,queue, table etc.')
 param groupIds string[] = []
 
 var vprivateEndpointName = !empty(privateEndpointName)
