@@ -22,8 +22,8 @@ param location string = 'centralus'
 param ownerName string = 'Jeff Shurak'
 param storagesku string = 'Standard_LRS'
 
-@description('Name of the Flex Consumption function app.')
-param functionAppName string
+//@description('Name of the Flex Consumption function app.')
+//param functionAppName string
 
 //any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
@@ -79,6 +79,9 @@ module peering '../modules/networkpeering.bicep' = {
     net2NetworkName: networkName
     allowGatewayTransit: false
   }
+  dependsOn: [
+    wlNetwork
+  ]
 }
 //end network buildout
 
@@ -129,7 +132,7 @@ module privateEndpoint '../modules/privateendpoints.bicep' = {
   params: {
     serviceID: storage.outputs.resStorageID
     subnetResourceID: wlNetwork.outputs.subnetIDs[0]
-    groupIds: ['blob','file','queue','table']
+    groupIds: ['blob']
   }
 }
 //end storage account buildout
