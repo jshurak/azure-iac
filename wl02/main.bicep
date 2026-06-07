@@ -44,6 +44,14 @@ resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
+//generate some variables to shorten private dns zone resource id
+var blobPrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net'
+var queuePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net'
+var tablePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net'
+
+
+
+
 //start network buildout
 @description('Virtual network and subnets for the workload.')
 module wlNetwork '../modules/virtualnetwork.bicep' = {
@@ -154,7 +162,7 @@ module storage '../modules/storage.bicep' = {
 module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: privateDNSZone.id
+    privateDnsZoneResourceId: blobPrivateDNSZoneResourceId
     privateEndpointName: '${namePrefix}-blob-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
@@ -164,7 +172,7 @@ module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
 module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: privateDNSZone.id
+    privateDnsZoneResourceId: queuePrivateDNSZoneResourceId
     privateEndpointName: '${namePrefix}-queue-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
@@ -174,7 +182,7 @@ module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
 module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: privateDNSZone.id
+    privateDnsZoneResourceId: tablePrivateDNSZoneResourceId
     privateEndpointName: '${namePrefix}-table-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
