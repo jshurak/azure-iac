@@ -31,7 +31,7 @@ param userAssignedIdentityClientID string = ''
 param appInsightInstrumentationKey string = ''
 
 @description('Full ARM resource ID of the virtual network to deploy the function app into.')
-param virtualNetworkResourceId string
+param virtualNetworkSubnetResourceId string
 
 
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
