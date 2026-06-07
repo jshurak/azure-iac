@@ -22,8 +22,8 @@ param location string = 'centralus'
 param ownerName string = 'Jeff Shurak'
 param storagesku string = 'Standard_LRS'
 
-//@description('Name of the Flex Consumption function app.')
-//param functionAppName string
+@description('Name of the Flex Consumption function app.')
+param functionAppName string
 
 //any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
@@ -127,9 +127,10 @@ module storage '../modules/storage.bicep' = {
   }
 }
 //private endpoint for the storage
-module privateEndpoint '../modules/privateendpoints.bicep' = {
+module storagePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
+    privateEndpointName: '${namePrefix}-storage-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: wlNetwork.outputs.subnetIDs[0]
     groupIds: ['blob']
@@ -148,7 +149,9 @@ module appInsight '../modules/appinsight.bicep' = {
 }
 //end app insight and log analytics workspace buildout
 
-/*
+
+
+//build the app service and Function App
 
 @description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
@@ -172,5 +175,16 @@ module functionApp '../modules/functionapp.bicep' = {
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
 }
-//build the app service and Function App
-*/
+
+
+//private endpoint for the storage
+module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
+    serviceID: storage.outputs.resStorageID
+    subnetResourceID: wlNetwork.outputs.subnetIDs[0]
+    groupIds: ['blob']
+  }
+}
+//end storage account buildout
