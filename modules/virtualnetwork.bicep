@@ -31,10 +31,10 @@ param subnets object = {}
 @description('Default subnet layouts by network type. Keys are subnet names; values are prefix lengths passed to cidrSubnet().')
 var subnetDefaults = {
   hub: {
-    GatewaySubnet: '26'
-    AzureFirewallSubnet: '26'
-    AzureFirewallManagementSubnet: '26'
-    AzureBastionSubnet: '26'
+    GatewaySubnet: {CIDR: '26', Delegation: 'none'}
+    AzureFirewallSubnet: {CIDR: '26', Delegation: 'none'}
+    AzureFirewallManagementSubnet: {CIDR: '26', Delegation: 'none'}
+    AzureBastionSubnet: {CIDR: '26', Delegation: 'none'}
   }
   spoke: {
     
@@ -71,6 +71,8 @@ module Network 'br/public:avm/res/network/virtual-network:0.9.0' = {
     }]
   }
 }
+
+
 
 
 @description('ARM resource IDs of subnets created in the  virtual network.')

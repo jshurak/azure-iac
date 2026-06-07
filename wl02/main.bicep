@@ -25,6 +25,13 @@ param storagesku string = 'Standard_LRS'
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
 
+param subNets object = {
+
+}
+
+
+
+
 //any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
@@ -49,12 +56,29 @@ module wlNetwork '../modules/virtualnetwork.bicep' = {
     ipAddressSpace: '10.2.0.0'
     namePrefix: namePrefix
     networkType: 'spoke'
-    subnets: {
-      PrivateEndpointSubnet: '24'
-      FunctionAppSubnet: '24'
-    }
   }
 }
+
+
+module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'PrivateEndpointSubnet'
+    virtualNetworkName: wlNetwork.name
+    addressPrefix: '10.2.1.0/24'
+  }
+}
+
+module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'PrivateEndpointSubnet'
+    virtualNetworkName: wlNetwork.name
+    addressPrefix: '10.2.2.0/24'
+    delegation: 'Microsoft.App/environments'
+  }
+}
+
 
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -134,7 +158,7 @@ module storagePrivateEndpoint '../modules/privateendpoints.bicep' = {
     privateDnsZoneResourceId: privateDNSZone.id
     privateEndpointName: '${namePrefix}-storage-pe'
     serviceID: storage.outputs.resStorageID
-    subnetResourceID: '${wlNetwork.outputs.NetworkResourceID}/subnets/PrivateEndpointSubnet'
+    subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['blob']
   }
 }
@@ -168,7 +192,7 @@ module functionApp '../modules/functionapp.bicep' = {
   scope: wlResourceGroup
   params: {
     functionAppName: functionAppName
-    virtualNetworkSubnetResourceId: '${wlNetwork.outputs.NetworkResourceID}/subnets/FunctionAppSubnet'
+    virtualNetworkSubnetResourceId: fnSubnet.outputs.resourceId
     storageAccountResourceID: storage.outputs.resStorageID
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
@@ -187,7 +211,7 @@ module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
     privateDnsZoneResourceId: privateDNSZone.id
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
-    subnetResourceID: '${wlNetwork.outputs.NetworkResourceID}/subnets/PrivateEndpointSubnet'
+    subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['sites']
   }
 }
