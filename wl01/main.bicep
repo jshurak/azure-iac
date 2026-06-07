@@ -78,6 +78,7 @@ module appPlan '../modules/appserviceplan.bicep' = {
 module appInsight '../modules/appinsight.bicep' = {
   scope: resourceGroup
   params: {
+    namePrefix: namePrefix
     appInsightsName: '${namePrefix}-appinsights'
   }
 }

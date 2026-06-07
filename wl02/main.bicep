@@ -142,6 +142,7 @@ module privateEndpoint '../modules/privateendpoints.bicep' = {
 module appInsight '../modules/appinsight.bicep' = {
   scope: wlResourceGroup
   params: {
+    namePrefix: namePrefix
     appInsightsName: '${namePrefix}-appinsights'
   }
 }
