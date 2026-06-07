@@ -30,6 +30,9 @@ param userAssignedIdentityClientID string = ''
 @description('Instrumentation key of the deployed App Insights.')
 param appInsightInstrumentationKey string = ''
 
+@description('Full ARM resource ID of the virtual network to deploy the function app into.')
+param virtualNetworkResourceId string
+
 
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
@@ -69,6 +72,7 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
     siteConfig: {
       alwaysOn: false
     }
+    virtualNetworkSubnetResourceId: virtualNetworkSubnetResourceId
     configs: [
       {
         name: 'appsettings'

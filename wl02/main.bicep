@@ -50,7 +50,8 @@ module wlNetwork '../modules/virtualnetwork.bicep' = {
     namePrefix: namePrefix
     networkType: 'spoke'
     subnets: {
-      workloadSubnet: '24'
+      PrivateEndpointSubnet: '24'
+      FunctionAppSubnet: '24'
     }
   }
 }
@@ -130,6 +131,7 @@ module storage '../modules/storage.bicep' = {
 module storagePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
+    privateDnsZoneResourceId: privateDNSZone.id
     privateEndpointName: '${namePrefix}-storage-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: wlNetwork.outputs.subnetIDs[0]
@@ -166,6 +168,7 @@ module functionApp '../modules/functionapp.bicep' = {
   scope: wlResourceGroup
   params: {
     functionAppName: functionAppName
+    virtualNetworkSubnetResourceId: wlNetwork.outputs.subnetIDs[1]
     storageAccountResourceID: storage.outputs.resStorageID
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
@@ -181,6 +184,7 @@ module functionApp '../modules/functionapp.bicep' = {
 module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
+    privateDnsZoneResourceId: privateDNSZone.id
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
     subnetResourceID: wlNetwork.outputs.subnetIDs[0]
