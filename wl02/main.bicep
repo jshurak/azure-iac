@@ -182,9 +182,9 @@ module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
-    serviceID: storage.outputs.resStorageID
+    serviceID: functionApp.outputs.resourceId
     subnetResourceID: wlNetwork.outputs.subnetIDs[0]
-    groupIds: ['blob']
+    groupIds: ['sites']
   }
 }
 //end storage account buildout

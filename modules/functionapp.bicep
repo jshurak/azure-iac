@@ -85,3 +85,6 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
     ]
   }
 }
+
+
+output resourceId string = functionApp.outputs.resourceId
