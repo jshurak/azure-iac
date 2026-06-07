@@ -155,7 +155,7 @@ module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
     privateDnsZoneResourceId: privateDNSZone.id
-    privateEndpointName: '${namePrefix}-storage-pe'
+    privateEndpointName: '${namePrefix}-blob-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['blob']
@@ -165,7 +165,7 @@ module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
     privateDnsZoneResourceId: privateDNSZone.id
-    privateEndpointName: '${namePrefix}-storage-pe'
+    privateEndpointName: '${namePrefix}-queue-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['queue']
@@ -175,7 +175,7 @@ module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
     privateDnsZoneResourceId: privateDNSZone.id
-    privateEndpointName: '${namePrefix}-storage-pe'
+    privateEndpointName: '${namePrefix}-table-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['table']
