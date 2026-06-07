@@ -25,9 +25,8 @@ param storagesku string = 'Standard_LRS'
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
 
-param subNets object = {
-
-}
+//param subNets object = {
+//}
 
 
 
@@ -64,7 +63,7 @@ module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   scope: wlResourceGroup
   params: {
     name: 'PrivateEndpointSubnet'
-    virtualNetworkName: wlNetwork.name
+    virtualNetworkName: wlNetwork.outputs.NetworkName
     addressPrefix: '10.2.1.0/24'
   }
 }
@@ -72,8 +71,8 @@ module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
 module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   scope: wlResourceGroup
   params: {
-    name: 'PrivateEndpointSubnet'
-    virtualNetworkName: wlNetwork.name
+    name: 'FunctionAppSubnet'
+    virtualNetworkName: wlNetwork.outputs.NetworkName
     addressPrefix: '10.2.2.0/24'
     delegation: 'Microsoft.App/environments'
   }
@@ -152,7 +151,7 @@ module storage '../modules/storage.bicep' = {
   }
 }
 //private endpoint for the storage
-module storagePrivateEndpoint '../modules/privateendpoints.bicep' = {
+module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
     privateDnsZoneResourceId: privateDNSZone.id
@@ -160,6 +159,26 @@ module storagePrivateEndpoint '../modules/privateendpoints.bicep' = {
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['blob']
+  }
+}
+module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    privateDnsZoneResourceId: privateDNSZone.id
+    privateEndpointName: '${namePrefix}-storage-pe'
+    serviceID: storage.outputs.resStorageID
+    subnetResourceID: peSubnet.outputs.resourceId
+    groupIds: ['queue']
+  }
+}
+module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    privateDnsZoneResourceId: privateDNSZone.id
+    privateEndpointName: '${namePrefix}-storage-pe'
+    serviceID: storage.outputs.resStorageID
+    subnetResourceID: peSubnet.outputs.resourceId
+    groupIds: ['table']
   }
 }
 //end storage account buildout
