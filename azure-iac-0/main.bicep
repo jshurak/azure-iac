@@ -52,10 +52,6 @@ module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   params: {
     name: '${namePrefix}-company.com'
     location: 'global'
-    lock: {
-      kind: 'CanNotDelete'
-      name: 'NoDisassemble'
-    }
     tags: {
       Environment: 'Prod'
       Owner: ownerName
