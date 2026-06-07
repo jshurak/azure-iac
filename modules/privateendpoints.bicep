@@ -12,6 +12,8 @@ param namePrefix string = 'pe'
 @description('Full ARM resource ID of the target service (for example, a storage account).')
 param serviceID string
 
+param groupIds string[] = []
+
 var vprivateEndpointName = !empty(privateEndpointName)
   ? privateEndpointName
   : '${namePrefix}-${uniqueString(resourceGroup().id)}'
@@ -26,9 +28,7 @@ module privateEndpoint 'br/public:avm/res/network/private-endpoint:0.12.1' = {
         name: vprivateEndpointName
         properties: {
           privateLinkServiceId: serviceID
-          groupIds: [
-            'blob'
-          ]
+          groupIds: groupIds
         }
       }
     ]

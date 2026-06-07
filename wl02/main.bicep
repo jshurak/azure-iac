@@ -20,6 +20,10 @@ param dnsResourceGroupName string
 param namePrefix string = 'wl02'
 param location string = 'centralus'
 param ownerName string = 'Jeff Shurak'
+param storagesku string = 'Standard_LRS'
+
+@description('Name of the Flex Consumption function app.')
+param functionAppName string
 
 
 @description('Private dns zone for our production environment.')
@@ -34,6 +38,7 @@ resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
+//start network buildout
 @description('Virtual network and subnets for the workload.')
 module wlNetwork '../modules/virtualnetwork.bicep' = {
   scope: wlResourceGroup
@@ -75,3 +80,82 @@ module peering '../modules/networkpeering.bicep' = {
     allowGatewayTransit: false
   }
 }
+//end network buildout
+
+//start identity buildout
+module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1' = {
+  scope: wlResourceGroup
+  params: {
+    name: '${namePrefix}-identity'
+  }
+}
+//end identity buildout
+
+//build storage account and grant rbac permission to the identity
+module storage '../modules/storage.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    storageAccountName: '${namePrefix}st${uniqueString(wlResourceGroup.id)}'
+    storageSku: storagesku
+    containerNames: ['${namePrefix}-app-container']
+    blobPublicAccess: false
+    roleAssignments: [
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Contributor'
+      }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Owner'
+      }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Table Data Contributor'
+      }
+      {
+        principalId: identity.outputs.principalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Queue Data Contributor'
+      }
+    ]
+  }
+}
+//end storage account buildout
+
+
+//build app insight and log analytics workspace
+module appInsight '../modules/appinsight.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    appInsightsName: '${namePrefix}-appinsights'
+  }
+}
+//end app insight and log analytics workspace buildout
+
+
+@description('Flex Consumption App Service plan for the function app.')
+module appPlan '../modules/appserviceplan.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    appServicePlanName: '${namePrefix}-appservice-plan'
+  }
+}
+
+@description('Python Flex Consumption function app with identity-based deployment storage.')
+module functionApp '../modules/functionapp.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    functionAppName: functionAppName
+    storageAccountResourceID: storage.outputs.resStorageID
+    storageAccountName: storage.outputs.resStorageName
+    userAssignedIdentityClientID: identity.outputs.clientId
+    blobContainerURL: storage.outputs.blobContainerURL
+    serverFarmResourceID: appPlan.outputs.appServicePlanResourceID
+    userAssignedResourceID: identity.outputs.resourceId
+    appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
+  }
+}
+//build the app service and Function App

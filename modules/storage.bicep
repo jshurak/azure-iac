@@ -15,6 +15,28 @@ param storageKind string = 'StorageV2'
 @description('Public access policy for blob.')
 param blobPublicAccess bool = false
 
+@allowed([
+  'Enabled'
+  'Disabled'
+  'SecuredByPerimeter'
+])
+@description('Public access for storage account')
+param publicNetworkAccess string = 'Disabled'
+
+@allowed([
+  'AzureServices'
+  'None'
+])
+@description('ACL bypass for storage account')
+param aclBypass string = 'None'
+
+@allowed([
+  'Allow'
+  'Deny'
+])
+@description('Default action for ACL')
+param aclDefaultAction string = 'Deny'
+
 @description('Blob container names to create in the storage account.')
 param containerNames string[] = []
 
@@ -26,9 +48,11 @@ var vStorageAccountName = !empty(storageAccountName)
   : '${namePrefix}${uniqueString(resourceGroup().id)}'
 
 // Bicep requires the loop body object on the same line as the for-expression colon.
-var blobContainers = [for name in containerNames: {
-  name: name
-}]
+var blobContainers = [
+  for name in containerNames: {
+    name: name
+  }
+]
 
 @description('StorageV2 account with public blob access disabled.')
 module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
@@ -40,13 +64,15 @@ module resStorage 'br/public:avm/res/storage/storage-account:0.32.1' = {
     location: resourceGroup().location
     roleAssignments: roleAssignments
     allowSharedKeyAccess: true
-    blobServices: !empty(containerNames) ? {
-      containers: blobContainers
-    } : null
-    publicNetworkAccess: 'Enabled'
+    blobServices: !empty(containerNames)
+      ? {
+          containers: blobContainers
+        }
+      : null
+    publicNetworkAccess: publicNetworkAccess
     networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
+      bypass: aclBypass
+      defaultAction: aclDefaultAction
     }
   }
 }
@@ -56,7 +82,6 @@ output resStorageName string = resStorage.outputs.name
 
 @description('Full ARM resource ID of the deployed storage account.')
 output resStorageID string = resStorage.outputs.resourceId
-
 
 @description('Blob container URL for function app deployment storage (first container when containerNames is set).')
 output blobContainerURL string = !empty(containerNames)
