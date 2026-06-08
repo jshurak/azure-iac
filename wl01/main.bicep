@@ -65,6 +65,13 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
   name: 'js-company.com'
 }
 
+
+resource hubNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
+  scope: resourceGroup(hubResourceGroupName)
+  name: hubNetworkName
+}
+
+
 @description('Resource group that hosts the workload.')
 resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-rg'
@@ -246,13 +253,13 @@ module functionAppPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8
   }
 }
 
-@description('Links the hub VNet to the new function app private dns zone.')
+@description('Links the hub VNet to the new function app private dns zone so it can be resolved across peering.')
 module centralHubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(hubResourceGroupName)
   params: {
     name: '${functionAppName}-dns-link'
     privateDnsZoneName: functionAppPrivateDNSZone.outputs.name
-    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    virtualNetworkResourceId: hubNetwork.id
     location: 'global'
     registrationEnabled: true
     tags: {
