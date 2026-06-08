@@ -44,6 +44,8 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
+
+/*
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
 module coreVNet '../modules/virtualnetwork.bicep' = {
   scope: coreResourceGroup
@@ -93,7 +95,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 }
-
+*/
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
