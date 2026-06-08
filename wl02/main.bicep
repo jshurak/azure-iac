@@ -28,9 +28,6 @@ param functionAppName string
 //param subNets object = {
 //}
 
-
-
-
 //any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
@@ -49,9 +46,6 @@ var blobPrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Ne
 var queuePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net'
 var tablePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net'
 
-
-
-
 //start network buildout
 @description('Virtual network and subnets for the workload.')
 module wlNetwork '../modules/virtualnetwork.bicep' = {
@@ -65,7 +59,6 @@ module wlNetwork '../modules/virtualnetwork.bicep' = {
     networkType: 'spoke'
   }
 }
-
 
 module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   scope: wlResourceGroup
@@ -85,7 +78,6 @@ module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
     delegation: 'Microsoft.App/environments'
   }
 }
-
 
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -158,31 +150,57 @@ module storage '../modules/storage.bicep' = {
     ]
   }
 }
+
 //private endpoint for the storage
+module blobPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'privatelink.blob.core.windows.net'
+    location: 'global'
+  }
+}
+
 module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: blobPrivateDNSZoneResourceId
+    privateDnsZoneResourceId: blobPrivateDNSZone.outputs.resourceId
     privateEndpointName: '${namePrefix}-blob-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['blob']
   }
 }
+
+module queuePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'privatelink.queue.core.windows.net'
+    location: 'global'
+  }
+}
+
 module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: queuePrivateDNSZoneResourceId
+    privateDnsZoneResourceId: queuePrivateDNSZone.outputs.resourceId
     privateEndpointName: '${namePrefix}-queue-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
     groupIds: ['queue']
   }
 }
+
+module tablePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'privatelink.table.core.windows.net'
+    location: 'global'
+  }
+}
 module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: tablePrivateDNSZoneResourceId
+    privateDnsZoneResourceId: tablePrivateDNSZone.outputs.resourceId
     privateEndpointName: '${namePrefix}-table-pe'
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
@@ -190,7 +208,6 @@ module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
   }
 }
 //end storage account buildout
-
 
 //build app insight and log analytics workspace
 module appInsight '../modules/appinsight.bicep' = {
@@ -201,8 +218,6 @@ module appInsight '../modules/appinsight.bicep' = {
   }
 }
 //end app insight and log analytics workspace buildout
-
-
 
 //build the app service and Function App
 
@@ -229,7 +244,6 @@ module functionApp '../modules/functionapp.bicep' = {
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
 }
-
 
 //private endpoint for the storage
 module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
