@@ -87,3 +87,5 @@ module coreStorage '../modules/storage.bicep' = {
     storageAccountName: '${namePrefix}${location}corestorage'
   }
 }
+
+
