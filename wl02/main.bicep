@@ -1,4 +1,4 @@
-metadata description = 'This workload deploys an function app'
+metadata description = 'This workload deploys a function app with spoke networking, private endpoints, and identity-based storage access.'
 targetScope = 'subscription'
 
 /*
@@ -12,26 +12,55 @@ an app service plan
 the python function app
 */
 
+@description('Name of the hub virtual network to peer with.')
 param hubNetworkName string
+
+@description('Resource group that hosts the hub virtual network.')
 param hubResourceGroupName string
+
+@description('Name of the spoke virtual network for this workload.')
 param networkName string
+
+@description('Resource group that hosts the private DNS zone used for VNet registration.')
 param dnsResourceGroupName string
 
+@description('Prefix applied to workload resource names (for example, wl02-centralus-rg).')
 param namePrefix string = 'wl02'
+
+@description('Azure region for the workload resource group and deployed resources.')
 param location string = 'centralus'
+
+@description('Owner name applied as a tag on deployed resources.')
 param ownerName string = 'Jeff Shurak'
+
+@description('Replication SKU for the workload storage account (LRS or zone-redundant ZRS).')
+@allowed([
+  'Standard_LRS'
+  'Standard_ZRS'
+])
 param storagesku string = 'Standard_LRS'
+
+
+
+//Function apps require blob/queue/table contributor roles.  In order to keep this solution off the 
+//public internet, well will create dns zones and private endpoints for blob, queue, and table services.
+@description('Storage subresources to expose via private endpoints (blob, queue, table, file, or dfs).')
+@allowed([
+  'blob'
+  'queue'
+  'table'
+])
 param storageEndpoints array = [
   'blob'
   'queue'
   'table'
 ]
 
-
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
 
-//any existing resources that we need for this.  In this case, we need a private dns zone.
+//any existing resources that we need for this.  
+//In this case, we need a private dns zone to set registration for the workload vNet.
 @description('Private dns zone for our production environment.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -58,6 +87,7 @@ module wlNetwork '../modules/virtualnetwork.bicep' = {
   }
 }
 
+@description('Subnet reserved for private endpoints.')
 module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   scope: wlResourceGroup
   params: {
@@ -67,6 +97,8 @@ module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   }
 }
 
+
+@description('Subnet delegated to Azure Functions Flex Consumption.')
 module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   scope: wlResourceGroup
   params: {
@@ -75,8 +107,12 @@ module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
     addressPrefix: '10.2.2.0/24'
     delegation: 'Microsoft.App/environments'
   }
+  dependsOn: [
+    peSubnet
+  ]
 }
 
+@description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(dnsResourceGroupName)
   params: {
@@ -92,6 +128,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
   }
 }
 
+@description('Bidirectional peering between the hub and spoke virtual networks.')
 module peering '../modules/networkpeering.bicep' = {
   scope: subscription()
   params: {
@@ -108,6 +145,7 @@ module peering '../modules/networkpeering.bicep' = {
 //end network buildout
 
 //start identity buildout
+@description('User-assigned managed identity for function app storage access.')
 module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1' = {
   scope: wlResourceGroup
   params: {
@@ -117,6 +155,7 @@ module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1
 //end identity buildout
 
 //build storage account and grant rbac permission to the identity
+@description('Storage account, blob container, and RBAC for the function app deployment and triggers.')
 module storage '../modules/storage.bicep' = {
   scope: wlResourceGroup
   params: {
@@ -149,100 +188,42 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-//private endpoints for the storage
-module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [for endpoint in storageEndpoints: {
-  scope: wlResourceGroup
-  params: {
-    name: 'privatelink.${endpoint}.core.windows.net'
-    location: 'global'
-    virtualNetworkLinks: [{
-      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-    }]
+//Loops through the storageEndpoints array and creates a private dns zone for each endpoint
+@description('Private DNS zones for storage private link endpoints.')
+module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [
+  for endpoint in storageEndpoints: {
+    scope: wlResourceGroup
+    params: {
+      name: 'privatelink.${endpoint}.core.windows.net'
+      location: 'global'
+      virtualNetworkLinks: [
+        {
+          virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+        }
+      ]
+    }
   }
-}]
+]
 
-module storagePrivateEndpoints '../modules/privateendpoints.bicep' = [for (endpoint,i) in storageEndpoints: {
-  scope: wlResourceGroup
-  params: {
-    namePrefix: '${endpoint}-pe'
-    privateDnsZoneResourceId: storagePrivateDNSZone[i].outputs.resourceId
-    serviceID: storage.outputs.resStorageID
-    subnetResourceID: peSubnet.outputs.resourceId
-    groupIds: [endpoint]
+//Loops through the storageEndpoints array and creates a private endpoint for each endpoint
+@description('Private endpoints connecting the spoke VNet to storage subresources.')
+module storagePrivateEndpoints '../modules/privateendpoints.bicep' = [
+  for (endpoint, i) in storageEndpoints: {
+    scope: wlResourceGroup
+    params: {
+      privateEndpointName: '${endpoint}-pe'
+      privateDnsZoneResourceId: storagePrivateDNSZone[i].outputs.resourceId
+      serviceID: storage.outputs.resStorageID
+      subnetResourceID: peSubnet.outputs.resourceId
+      groupIds: [endpoint]
+    }
   }
-}]
-/*
+]
 
-
-module blobPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: wlResourceGroup
-  params: {
-    name: 'privatelink.blob.core.windows.net'
-    location: 'global'
-    virtualNetworkLinks: [{
-      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-    }]
-  }
-}
-
-module blobPrivateEndpoint '../modules/privateendpoints.bicep' = {
-  scope: wlResourceGroup
-  params: {
-    privateDnsZoneResourceId: blobPrivateDNSZone.outputs.resourceId
-    privateEndpointName: '${namePrefix}-blob-pe'
-    serviceID: storage.outputs.resStorageID
-    subnetResourceID: peSubnet.outputs.resourceId
-    groupIds: ['blob']
-  }
-}
-
-module queuePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: wlResourceGroup
-  params: {
-    name: 'privatelink.queue.core.windows.net'
-    location: 'global'
-    virtualNetworkLinks: [{
-      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-    }]
-  }
-}
-
-module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
-  scope: wlResourceGroup
-  params: {
-    privateDnsZoneResourceId: queuePrivateDNSZone.outputs.resourceId
-    privateEndpointName: '${namePrefix}-queue-pe'
-    serviceID: storage.outputs.resStorageID
-    subnetResourceID: peSubnet.outputs.resourceId
-    groupIds: ['queue']
-  }
-}
-
-
-module tablePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: wlResourceGroup
-  params: {
-    name: 'privatelink.table.core.windows.net'
-    location: 'global'
-    virtualNetworkLinks: [{
-      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-    }]
-  }
-}
-module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
-  scope: wlResourceGroup
-  params: {
-    privateDnsZoneResourceId: tablePrivateDNSZone.outputs.resourceId
-    privateEndpointName: '${namePrefix}-table-pe'
-    serviceID: storage.outputs.resStorageID
-    subnetResourceID: peSubnet.outputs.resourceId
-    groupIds: ['table']
-  }
-}
-  */
 //end storage account buildout
 
 //build app insight and log analytics workspace
+@description('Application Insights and Log Analytics workspace for the function app.')
 module appInsight '../modules/appinsight.bicep' = {
   scope: wlResourceGroup
   params: {
@@ -281,7 +262,7 @@ module functionApp '../modules/functionapp.bicep' = {
   ]
 }
 
-//private endpoint for the storage
+@description('Private endpoint for inbound access to the function app.')
 module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
@@ -292,4 +273,4 @@ module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
     groupIds: ['sites']
   }
 }
-//end storage account buildout
+//end function app buildout
