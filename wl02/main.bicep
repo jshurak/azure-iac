@@ -41,11 +41,6 @@ resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
-//generate some variables to shorten private dns zone resource id
-var blobPrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net'
-var queuePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net'
-var tablePrivateDNSZoneResourceId = '${wlResourceGroup.id}/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net'
-
 //start network buildout
 @description('Virtual network and subnets for the workload.')
 module wlNetwork '../modules/virtualnetwork.bicep' = {
@@ -157,6 +152,9 @@ module blobPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   params: {
     name: 'privatelink.blob.core.windows.net'
     location: 'global'
+    virtualNetworkLinks: [{
+      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    }]
   }
 }
 
@@ -176,6 +174,9 @@ module queuePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = 
   params: {
     name: 'privatelink.queue.core.windows.net'
     location: 'global'
+    virtualNetworkLinks: [{
+      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    }]
   }
 }
 
@@ -190,11 +191,15 @@ module queuePrivateEndpoint '../modules/privateendpoints.bicep' = {
   }
 }
 
+
 module tablePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   scope: wlResourceGroup
   params: {
     name: 'privatelink.table.core.windows.net'
     location: 'global'
+    virtualNetworkLinks: [{
+      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    }]
   }
 }
 module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
@@ -243,6 +248,11 @@ module functionApp '../modules/functionapp.bicep' = {
     userAssignedResourceID: identity.outputs.resourceId
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
+  dependsOn: [
+    blobPrivateEndpoint
+    queuePrivateEndpoint
+    tablePrivateEndpoint
+  ]
 }
 
 //private endpoint for the storage
