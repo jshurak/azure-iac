@@ -20,17 +20,15 @@ param ipAddressSpace string
 @description('CIDR suffix for the hub VNet, including the leading slash (for example, /16).')
 param CIDR string
 
-
-@description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
-param ownerName string
-
 @description('Resource group that hosts the private dns zone.')
 param hubResourceGroupName string
 
+@description('Company domain for the private dns zone.')
+param companyDomain string
 
 param hubNetworkName string
 
-param dnsResourceGroup string
+
 
 
 
@@ -42,6 +40,22 @@ param networkName string = '${namePrefix}-${location}-hub-vnet'
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-core-rg'
   location: location
+}
+
+
+
+module coreNetwork './network/network.bicep' = {
+  scope: coreResourceGroup
+  params: {
+    companyDomain: companyDomain
+    resourceGroupName: coreResourceGroup.name
+    networkName: networkName
+    namePrefix: namePrefix
+    CIDR: CIDR
+    ipAddressSpace: ipAddressSpace
+    hubResourceGroupName: hubResourceGroupName
+    hubNetworkName: hubNetworkName
+  }
 }
 
 
