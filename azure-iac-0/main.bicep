@@ -53,7 +53,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
     location: location
-    namePrefix: '${namePrefix}-${location}'
+    namePrefix: '${namePrefix}-${coreResourceGroup.location}'
   }
 }
 
@@ -63,6 +63,6 @@ module coreStorage '../modules/storage.bicep' = {
   params: {
     namePrefix: namePrefix
     storageSku: storageSku
-    storageAccountName: '${namePrefix}${location}corestorage'
+    storageAccountName: '${namePrefix}${coreResourceGroup.location}corestorage'
   }
 }
