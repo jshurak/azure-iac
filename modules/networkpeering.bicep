@@ -43,4 +43,7 @@ module net2ToNet1Peering 'br/public:avm/res/network/virtual-network/virtual-netw
     localVnetName: net2NetworkName
     remoteVirtualNetworkResourceId: net1Network.id
   }
+  dependsOn: [
+    net1ToNet2Peering
+  ]
 }
