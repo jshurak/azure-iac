@@ -65,13 +65,6 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
   name: 'js-company.com'
 }
 
-
-resource hubNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
-  scope: resourceGroup(hubResourceGroupName)
-  name: hubNetworkName
-}
-
-
 @description('Resource group that hosts the workload.')
 resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-rg'
@@ -240,28 +233,20 @@ module appInsight '../modules/appinsight.bicep' = {
 //build the app service, Function App, private dns zone and endpoint.  We will also register the private dns zone with the hub vNet.
 
 @description('Private DNS zones for Function App private link endpoints.')
-module functionAppPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: wlResourceGroup
-  params: {
-    name: 'privatelink.AzureWebSites.net'
-    location: 'global'
-    virtualNetworkLinks: [
-      {
-        virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-      }
-    ]
-  }
+resource functionAppPrivateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  scope: resourceGroup(dnsResourceGroupName)
+  name: 'privatelink.AzureWebSites.net'
 }
 
-@description('Links the hub VNet to the new function app private dns zone so it can be resolved across peering.')
-module centralHubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: resourceGroup(hubResourceGroupName)
+@description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
+module dnsNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: resourceGroup(dnsResourceGroupName)
   params: {
-    name: '${functionAppName}-dns-link'
-    privateDnsZoneName: functionAppPrivateDNSZone.outputs.name
-    virtualNetworkResourceId: hubNetwork.id
+    name: '${networkName}-dns-link'
+    privateDnsZoneName: functionAppPrivateDNSZone.name
+    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
     location: 'global'
-    registrationEnabled: true
+    registrationEnabled: false
     tags: {
       Environment: 'Prod'
       Owner: ownerName
@@ -301,12 +286,11 @@ module functionApp '../modules/functionapp.bicep' = {
   ]
 }
 
-
 @description('Private endpoint for inbound access to the function app.')
 module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: functionAppPrivateDNSZone.outputs.resourceId
+    privateDnsZoneResourceId: functionAppPrivateDNSZone.id
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
     subnetResourceID: peSubnet.outputs.resourceId

@@ -47,7 +47,7 @@ module coreVNet '../modules/virtualnetwork.bicep' = {
 
 
 @description('Private dns zone for our production environment.')
-module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   scope: coreResourceGroup
   params: {
     name: '${namePrefix}-company.com'
@@ -59,12 +59,27 @@ module privateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
     }
   }
 }
+@description('Private dns zone for our production environment.')
+module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: coreResourceGroup
+  params: {
+    name: 'privatelink.AzureWebSites.net'
+    location: 'global'
+    tags: {
+      Environment: 'Prod'
+      Owner: ownerName
+      
+    }
+  }
+}
 
-module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+
+
+module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: coreResourceGroup
   params: {
     name: '${networkName}-dns-link'
-    privateDnsZoneName: privateDNSZone.outputs.name
+    privateDnsZoneName: customPrivateDNSZone.outputs.name
     virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
     location: 'global'
     registrationEnabled: true
@@ -74,6 +89,22 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 }
+
+module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: coreResourceGroup
+  params: {
+    name: '${networkName}-websites-dns-link'
+    privateDnsZoneName: websitesDNSZone.outputs.name
+    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
+    location: 'global'
+    registrationEnabled: false
+    tags: {
+      Environment: 'Prod'
+      Owner: ownerName
+    }
+  }
+}
+
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
