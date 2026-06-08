@@ -21,12 +21,15 @@ param namePrefix string = 'wl02'
 param location string = 'centralus'
 param ownerName string = 'Jeff Shurak'
 param storagesku string = 'Standard_LRS'
+param storageEndpoints array = [
+  'blob'
+  'queue'
+  'table'
+]
+
 
 @description('Name of the Flex Consumption function app.')
 param functionAppName string
-
-//param subNets object = {
-//}
 
 //any existing resources that we need for this.  In this case, we need a private dns zone.
 @description('Private dns zone for our production environment.')
@@ -146,7 +149,30 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-//private endpoint for the storage
+//private endpoints for the storage
+module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [for endpoint in storageEndpoints: {
+  scope: wlResourceGroup
+  params: {
+    name: 'privatelink.${endpoint}.core.windows.net'
+    location: 'global'
+    virtualNetworkLinks: [{
+      virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    }]
+  }
+}]
+
+module storagePrivateEndpoints '../modules/privateendpoints.bicep' = [for (endpoint,i) in storageEndpoints: {
+  scope: wlResourceGroup
+  params: {
+    privateDnsZoneResourceId: storagePrivateDNSZone[i].outputs.resourceId
+    serviceID: storage.outputs.resStorageID
+    subnetResourceID: peSubnet.outputs.resourceId
+    groupIds: [endpoint]
+  }
+}]
+/*
+
+
 module blobPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   scope: wlResourceGroup
   params: {
@@ -212,6 +238,7 @@ module tablePrivateEndpoint '../modules/privateendpoints.bicep' = {
     groupIds: ['table']
   }
 }
+  */
 //end storage account buildout
 
 //build app insight and log analytics workspace
@@ -249,9 +276,7 @@ module functionApp '../modules/functionapp.bicep' = {
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
   }
   dependsOn: [
-    blobPrivateEndpoint
-    queuePrivateEndpoint
-    tablePrivateEndpoint
+    storagePrivateEndpoints
   ]
 }
 
