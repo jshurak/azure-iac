@@ -110,7 +110,7 @@ module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
 }
 
 
-/* //moved to core infrastructure hub
+
 @description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -126,7 +126,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 }
-  */
+
 
 @description('Bidirectional peering between the hub and spoke virtual networks.')
 module peering '../modules/networkpeering.bicep' = {
@@ -188,7 +188,9 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-//Loops through the storageEndpoints array and creates a private dns zone for each endpoint
+
+//moved to core infrastructure hub
+/*//Loops through the storageEndpoints array and creates a private dns zone for each endpoint
 @description('Private DNS zones for storage private link endpoints.')
 module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [
   for endpoint in storageEndpoints: {
@@ -203,7 +205,7 @@ module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' 
       ]
     }
   }
-]
+]*/
 
 //Loops through the storageEndpoints array and creates a private endpoint for each endpoint
 @description('Private endpoints connecting the spoke VNet to storage subresources.')

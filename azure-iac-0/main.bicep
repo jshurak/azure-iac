@@ -43,88 +43,12 @@ module coreNetwork './network/network.bicep' = {
     companyDomain: companyDomain
     resourceGroupName: coreResourceGroup.name
     networkName: networkName
-    location: location
     namePrefix: namePrefix
     CIDR: CIDR
     ipAddressSpace: ipAddressSpace
   }
 }
 
-
-/*
-@description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../modules/virtualnetwork.bicep' = {
-  scope: coreResourceGroup
-  params:{
-    networkType: 'hub'
-    networkName: networkName
-    location: location
-    CIDR: CIDR
-    ipAddressSpace: ipAddressSpace 
-    namePrefix: namePrefix
-  }
-}
-
-
-@description('Private dns zone for our production environment.')
-module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${namePrefix}-company.com'
-    location: 'global'
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-      
-    }
-  }
-}
-@description('Private dns zone for our production environment.')
-module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: coreResourceGroup
-  params: {
-    name: 'privatelink.AzureWebSites.net'
-    location: 'global'
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-      
-    }
-  }
-}
-
-
-
-module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${networkName}-dns-link'
-    privateDnsZoneName: customPrivateDNSZone.outputs.name
-    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: true
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-    }
-  }
-}
-
-module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${networkName}-websites-dns-link'
-    privateDnsZoneName: websitesDNSZone.outputs.name
-    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: false
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-    }
-  }
-}
-*/
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
