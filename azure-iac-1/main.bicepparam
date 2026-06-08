@@ -17,3 +17,5 @@ param networkName = '${namePrefix}-${location}-hub-vnet'
 
 
 param hubNetworkName = 'js-eastus2-hub-vnet'
+
+param hubResourceGroupName = 'js-eastus2-core-rg'
