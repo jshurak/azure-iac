@@ -30,8 +30,6 @@ param namePrefix string = 'wl01'
 @description('Azure region for the workload resource group and deployed resources.')
 param location string = 'centralus'
 
-@description('Owner name applied as a tag on deployed resources.')
-param ownerName string = 'Jeff Shurak'
 
 @description('Replication SKU for the workload storage account (LRS or zone-redundant ZRS).')
 @allowed([
@@ -57,19 +55,70 @@ param storageEndpoints array = [
 @description('Name of the Flex Consumption function app.')
 param functionAppName string = '${namePrefix}-function-app'
 
-//any existing resources that we need for this.  
-//In this case, we need a private dns zone to set registration for the workload vNet.
-@description('Private dns zone for our production environment.')
-resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
-  scope: resourceGroup(dnsResourceGroupName)
-  name: 'js-company.com'
-}
-
 @description('Resource group that hosts the workload.')
 resource wlResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-rg'
   location: location
 }
+
+module wlNetwork './network/network.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    dnsResourceGroupName: dnsResourceGroupName
+    hubResourceGroupName: hubResourceGroupName
+    hubNetworkName: hubNetworkName
+    networkName: networkName
+    namePrefix: namePrefix
+    CIDR: '/20'
+    ipAddressSpace: '10.2.0.0'
+    companyDomain: 'js-company.com'
+    resourceGroupName: wlResourceGroup.name
+    storageEndpoints: storageEndpoints
+  }
+}
+
+module identity './identity/identity.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    namePrefix: namePrefix
+  }
+}
+
+module storage './storage/storage.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    namePrefix: namePrefix
+    storagesku: storagesku
+    storageEndpoints: storageEndpoints
+    storagePrivateDnsZoneResourceIds: wlNetwork.outputs.storagePrivateDnsZoneResourceIds
+    peSubnetResourceId: wlNetwork.outputs.peSubnetResourceId
+    identityPrincipalId: identity.outputs.principalId
+  }
+}
+
+module appInsight './insights/app-insights.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    namePrefix: namePrefix
+  }
+}
+
+module functionApp './compute/function-app.bicep' = {
+  scope: wlResourceGroup
+  params: {
+    namePrefix: namePrefix
+    functionAppName: functionAppName
+    virtualNetworkSubnetResourceId: wlNetwork.outputs.fnSubnetResourceId
+    storageAccountResourceID: storage.outputs.resStorageID
+    storageAccountName: storage.outputs.resStorageName
+    userAssignedIdentityClientID: identity.outputs.clientId
+    blobContainerURL: storage.outputs.blobContainerURL
+    userAssignedResourceID: identity.outputs.resourceId
+    appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
+    functionAppPrivateDnsZoneResourceId: wlNetwork.outputs.functionAppPrivateDnsZoneResourceId
+  }
+}
+/*
 
 //start network buildout
 @description('Virtual network and subnets for the workload.')
@@ -144,6 +193,10 @@ module peering '../modules/networkpeering.bicep' = {
 }
 //end network buildout
 
+*/
+
+
+/*
 //start identity buildout
 @description('User-assigned managed identity for function app storage access.')
 module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1' = {
@@ -153,7 +206,10 @@ module identity 'br/public:avm/res/managed-identity/user-assigned-identity:0.5.1
   }
 }
 //end identity buildout
+*/
 
+
+/*
 //build storage account and grant rbac permission to the identity
 @description('Storage account, blob container, and RBAC for the function app deployment and triggers.')
 module storage '../modules/storage.bicep' = {
@@ -188,9 +244,8 @@ module storage '../modules/storage.bicep' = {
   }
 }
 
-
 //moved to core infrastructure hub
-/*//Loops through the storageEndpoints array and creates a private dns zone for each endpoint
+/* //Loops through the storageEndpoints array and creates a private dns zone for each endpoint
 @description('Private DNS zones for storage private link endpoints.')
 module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [
   for endpoint in storageEndpoints: {
@@ -205,7 +260,7 @@ module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' 
       ]
     }
   }
-]*/
+]
 
 //Loops through the storageEndpoints array and creates a private endpoint for each endpoint
 @description('Private endpoints connecting the spoke VNet to storage subresources.')
@@ -214,9 +269,9 @@ module storagePrivateEndpoints '../modules/privateendpoints.bicep' = [
     scope: wlResourceGroup
     params: {
       privateEndpointName: '${endpoint}-pe'
-      privateDnsZoneResourceId: storagePrivateDNSZone[i].outputs.resourceId
+      privateDnsZoneResourceId: wlNetwork.outputs.storagePrivateDnsZoneResourceIds[i]
       serviceID: storage.outputs.resStorageID
-      subnetResourceID: peSubnet.outputs.resourceId
+      subnetResourceID: wlNetwork.outputs.peSubnetResourceId
       groupIds: [endpoint]
     }
   }
@@ -249,7 +304,7 @@ module dnsNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
   params: {
     name: '${networkName}-dns-link'
     privateDnsZoneName: functionAppPrivateDNSZone.name
-    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    virtualNetworkResourceId: wlNetwork.outputs.networkResourceId
     location: 'global'
     registrationEnabled: false
     tags: {
@@ -258,9 +313,6 @@ module dnsNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 }
-
-
-
 
 
 
@@ -277,7 +329,7 @@ module functionApp '../modules/functionapp.bicep' = {
   scope: wlResourceGroup
   params: {
     functionAppName: functionAppName
-    virtualNetworkSubnetResourceId: fnSubnet.outputs.resourceId
+    virtualNetworkSubnetResourceId: wlNetwork.outputs.fnSubnetResourceId
     storageAccountResourceID: storage.outputs.resStorageID
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
@@ -298,8 +350,8 @@ module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
     privateDnsZoneResourceId: functionAppPrivateDNSZone.id
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
-    subnetResourceID: peSubnet.outputs.resourceId
+    subnetResourceID: wlNetwork.outputs.peSubnetResourceId
     groupIds: ['sites']
   }
-}
+}*/
 //end function app buildout
