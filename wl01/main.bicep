@@ -40,8 +40,6 @@ param ownerName string = 'Jeff Shurak'
 ])
 param storagesku string = 'Standard_LRS'
 
-
-
 //Function apps require blob/queue/table contributor roles.  In order to keep this solution off the 
 //public internet, well will create dns zones and private endpoints for blob, queue, and table services.
 @description('Storage subresources to expose via private endpoints (blob, queue, table, file, or dfs).')
@@ -96,7 +94,6 @@ module peSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
     addressPrefix: '10.2.1.0/24'
   }
 }
-
 
 @description('Subnet delegated to Azure Functions Flex Consumption.')
 module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
@@ -233,7 +230,42 @@ module appInsight '../modules/appinsight.bicep' = {
 }
 //end app insight and log analytics workspace buildout
 
-//build the app service and Function App
+//build the app service, Function App, private dns zone and endpoint.  We will also register the private dns zone with the hub vNet.
+
+@description('Private DNS zones for Function App private link endpoints.')
+module functionAppPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: wlResourceGroup
+  params: {
+    name: 'privatelink.AzureWebSites.net'
+    location: 'global'
+    virtualNetworkLinks: [
+      {
+        virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+      }
+    ]
+  }
+}
+
+@description('Links the hub VNet to the new function app private dns zone.')
+module centralHubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: resourceGroup(hubResourceGroupName)
+  params: {
+    name: '${functionAppName}-dns-link'
+    privateDnsZoneName: functionAppPrivateDNSZone.outputs.name
+    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    location: 'global'
+    registrationEnabled: true
+    tags: {
+      Environment: 'Prod'
+      Owner: ownerName
+    }
+  }
+}
+
+
+
+
+
 
 @description('Flex Consumption App Service plan for the function app.')
 module appPlan '../modules/appserviceplan.bicep' = {
@@ -262,11 +294,12 @@ module functionApp '../modules/functionapp.bicep' = {
   ]
 }
 
+
 @description('Private endpoint for inbound access to the function app.')
 module appPrivateEndpoint '../modules/privateendpoints.bicep' = {
   scope: wlResourceGroup
   params: {
-    privateDnsZoneResourceId: privateDNSZone.id
+    privateDnsZoneResourceId: functionAppPrivateDNSZone.outputs.resourceId
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
     subnetResourceID: peSubnet.outputs.resourceId
