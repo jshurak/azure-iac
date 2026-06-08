@@ -16,12 +16,12 @@ param net2NetworkName string
 @description('When true, allows gateway transit on the peering from net1 to net2.')
 param allowGatewayTransit bool = false
 
-resource net1Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
+resource net1Network 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: resourceGroup(net1ResourceGroup)
   name: net1NetworkName
 }
 
-resource net2Network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
+resource net2Network 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: resourceGroup(net2ResourceGroup)
   name: net2NetworkName
 }
