@@ -164,6 +164,7 @@ module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' 
 module storagePrivateEndpoints '../modules/privateendpoints.bicep' = [for (endpoint,i) in storageEndpoints: {
   scope: wlResourceGroup
   params: {
+    namePrefix: '${endpoint}-pe'
     privateDnsZoneResourceId: storagePrivateDNSZone[i].outputs.resourceId
     serviceID: storage.outputs.resStorageID
     subnetResourceID: peSubnet.outputs.resourceId
