@@ -5,7 +5,7 @@ param logAnalyticsName string = ''
 param appInsightsName string = ''
 
 @description('Prefix used when generating Log Analytics and Application Insights names (for example, wl01).')
-param namePrefix string = 'wl01'
+param namePrefix string 
 
 var vLogAnalyticsName = !empty(logAnalyticsName) ? logAnalyticsName : '${namePrefix}-loganalytics'
 var vAppInsightsName = !empty(appInsightsName) ? appInsightsName : '${namePrefix}-appinsights'
