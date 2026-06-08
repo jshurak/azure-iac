@@ -109,6 +109,8 @@ module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   ]
 }
 
+
+/* //moved to core infrastructure hub
 @description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(dnsResourceGroupName)
@@ -124,6 +126,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 }
+  */
 
 @description('Bidirectional peering between the hub and spoke virtual networks.')
 module peering '../modules/networkpeering.bicep' = {

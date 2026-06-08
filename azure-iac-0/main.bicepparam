@@ -13,3 +13,5 @@ param ownerName = 'Jeff Shurak'
 
 
 param networkName = '${namePrefix}-${location}-hub-vnet'
+
+param companyDomain = '${namePrefix}-company.com'

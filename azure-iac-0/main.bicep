@@ -26,12 +26,32 @@ param networkName string
 @description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
 param ownerName string
 
+@description('Company domain for the private dns zone.')
+param companyDomain string
+
+
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-core-rg'
   location: location
 }
 
+
+module coreNetwork './network/network.bicep' = {
+  scope: coreResourceGroup
+  params: {
+    companyDomain: companyDomain
+    resourceGroupName: coreResourceGroup.name
+    networkName: networkName
+    location: location
+    namePrefix: namePrefix
+    CIDR: CIDR
+    ipAddressSpace: ipAddressSpace
+  }
+}
+
+
+/*
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
 module coreVNet '../modules/virtualnetwork.bicep' = {
   scope: coreResourceGroup
@@ -104,7 +124,7 @@ module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virt
     }
   }
 }
-
+*/
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
