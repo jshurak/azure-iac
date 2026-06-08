@@ -34,6 +34,14 @@ param appInsightInstrumentationKey string = ''
 param virtualNetworkSubnetResourceId string
 
 
+@allowed([
+  'Disabled'
+  'Enabled'
+])
+@description('Public network access for the function app.  True to allow public access, false to restrict access to the virtual network.')
+param publicNetworkAccess string = 'Disabled'
+
+
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
 
@@ -69,6 +77,7 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
         userAssignedResourceID
       ]
     }
+    publicNetworkAccess: publicNetworkAccess
     siteConfig: {
       alwaysOn: false
     }
