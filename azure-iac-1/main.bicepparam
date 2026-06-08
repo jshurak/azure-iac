@@ -14,3 +14,6 @@ param ownerName = 'Jeff Shurak'
 
 
 param networkName = '${namePrefix}-${location}-hub-vnet'
+
+
+param hubNetworkName = 'js-eastus2-hub-vnet'

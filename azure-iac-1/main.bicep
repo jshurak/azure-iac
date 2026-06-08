@@ -20,14 +20,22 @@ param ipAddressSpace string
 @description('CIDR suffix for the hub VNet, including the leading slash (for example, /16).')
 param CIDR string
 
-@description('Name of the hub virtual network.')
-param networkName string
 
 @description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
 param ownerName string
 
 @description('Resource group that hosts the private dns zone.')
+param hubResourceGroupName string
+
+
+param hubNetworkName string
+
 param dnsResourceGroup string
+
+
+
+@description('Name of the virtual network. to create')
+param networkName string = '${namePrefix}-${location}-hub-vnet'
 
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
@@ -48,6 +56,23 @@ module coreVNet '../modules/virtualnetwork.bicep' = {
     namePrefix: namePrefix
   }
 }
+
+
+@description('peering between central us hub and east us hub')
+module peering '../modules/networkpeering.bicep' = {
+  scope: subscription()
+  params: {
+    net1ResourceGroup: hubResourceGroupName
+    net1NetworkName: hubNetworkName
+    net2ResourceGroup: coreResourceGroup.name
+    net2NetworkName: networkName
+    allowGatewayTransit: false
+  }
+  dependsOn: [
+    coreVNet
+  ]
+}
+
 
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(dnsResourceGroup)
