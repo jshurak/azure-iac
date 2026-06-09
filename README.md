@@ -8,6 +8,43 @@ Each template documents its contract with `metadata description` and `@descripti
 
 The repository models a hub-and-spoke design across two regions. The first landing-zone stack creates shared private DNS zones; the second region links to those zones and peers its hub. Workloads deploy into spoke networks that peer with a regional hub and consume the shared DNS infrastructure.
 
+### Network topology
+
+The central hub in `eastus2` hosts the shared private DNS zones for the entire estate. Regional hubs peer to the central hub, and workload spokes peer to their regional hub. Additional regional hubs follow the same pattern as `azure-iac-1`: peer to the central hub and link to the existing DNS zones rather than creating new ones.
+
+```mermaid
+flowchart TB
+  subgraph central["eastus2 — central hub (azure-iac-0)"]
+    HUB0["Hub VNet<br/>10.0.0.0/16"]
+    DNS["Shared private DNS zones<br/>company zone · privatelink.azurewebsites.net<br/>blob · queue · table"]
+  end
+
+  subgraph region1["centralus — regional hub (azure-iac-1)"]
+    HUB1["Hub VNet<br/>10.1.0.0/16"]
+  end
+
+  subgraph wl["centralus — workload (wl01)"]
+    SPOKE["Spoke VNet<br/>10.2.0.0/20<br/>Function app + private endpoints"]
+  end
+
+  HUBX["Potential regional hub<br/>(e.g. westus2)"]
+  HUBY["Potential regional hub<br/>(e.g. westeurope)"]
+  SPOKEX["Future spokes"]
+
+  HUB1 <-- "VNet peering" --> HUB0
+  SPOKE <-- "VNet peering" --> HUB1
+  HUBX <-. "VNet peering" .-> HUB0
+  HUBY <-. "VNet peering" .-> HUB0
+  SPOKEX <-. "VNet peering" .-> HUBX
+
+  style DNS fill:#e8f4e8,stroke:#2e7d32
+  style HUBX stroke-dasharray: 5 5
+  style HUBY stroke-dasharray: 5 5
+  style SPOKEX stroke-dasharray: 5 5
+```
+
+Solid lines are peering links deployed by this repository; dashed elements show how future regional hubs and spokes would attach. DNS zone links (not shown) point every VNet back at the shared zones in the central hub's resource group.
+
 **Deployment order** — each stack depends on the one before it:
 
 ```mermaid
