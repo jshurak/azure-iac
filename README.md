@@ -30,7 +30,7 @@ flowchart TB
   HUBY <-. "VNet peering" .-> HUB0
   SPOKEX <-. "VNet peering" .-> HUBX
 
-  style DNS fill:#e8f4e8,stroke:#2e7d32
+  style DNS fill:#2e7d32,stroke:#1b5e20,color:#ffffff
   style HUBX stroke-dasharray: 5 5
   style HUBY stroke-dasharray: 5 5
   style SPOKEX stroke-dasharray: 5 5
