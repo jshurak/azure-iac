@@ -1,62 +1,100 @@
 # Azure IaC
 
-Infrastructure-as-code for an Azure landing zone and sample workloads, built with [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview). Templates compose [Azure Verified Modules (AVM)](https://github.com/Azure/bicep-registry-modules) where possible and share reusable modules from [`modules/`](modules/).
+Infrastructure-as-code for a multi-region Azure landing zone and a sample private workload, built with [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview). Templates compose [Azure Verified Modules (AVM)](https://github.com/Azure/bicep-registry-modules) where possible and share reusable modules from [`modules/`](modules/).
 
-Each template documents its contract with `metadata description` and `@description` decorators so parameter help appears in the IDE, deployment UI, and generated ARM JSON.
+Each template documents its contract with `metadata description` and `@description` decorators. Parameter files (`.bicepparam`) use matching `//` comments where Bicep decorators are not supported.
 
 ## Architecture
 
+The repository models a hub-and-spoke design across two regions. The first landing-zone stack creates shared private DNS zones; the second region links to those zones and peers its hub. Workloads deploy into spoke networks that peer with a regional hub and consume the shared DNS infrastructure.
+
+**Deployment order** — each stack depends on the one before it:
+
 ```mermaid
-flowchart TB
-  subgraph landing["Landing zone (azure-iac-0 / azure-iac-1)"]
-    RG["{namePrefix}-{location}-core-rg"]
-    VNet["Hub VNet"]
-    KV["Key Vault"]
-    SA["Storage account"]
-    DNS["Private DNS zone link"]
-    RG --> VNet
-    RG --> KV
-    RG --> SA
-    VNet --> DNS
-  end
+flowchart LR
+  A0["azure-iac-0<br/>eastus2<br/>Hub + DNS zones<br/>Key Vault + storage"]
+  A1["azure-iac-1<br/>centralus<br/>Hub + peering<br/>DNS zone links"]
+  WL["wl01<br/>centralus<br/>Spoke + function app<br/>Private endpoints"]
 
-  subgraph workload["Workload (wl01)"]
-    WRG["{namePrefix}-rg"]
-    FA["Flex Consumption function app"]
-    ID["User-assigned identity"]
-    WSA["Workload storage"]
-    AI["Application Insights"]
-    WRG --> FA
-    WRG --> ID
-    WRG --> WSA
-    WRG --> AI
-  end
-
-  landing -.->|"optional peering via networkpeering module"| workload
+  A0 --> A1 --> WL
 ```
+
 
 ### Deployment stacks
 
-| Stack | Scope | Purpose |
-|-------|-------|---------|
-| [`azure-iac-0/`](azure-iac-0/) | Subscription | Primary landing zone: core resource group, hub VNet, **new** private DNS zone, Key Vault, and storage. |
-| [`azure-iac-1/`](azure-iac-1/) | Subscription | Secondary region landing zone: same core resources, but links to an **existing** private DNS zone in another resource group. |
-| [`wl01/`](wl01/) | Subscription | Sample workload: Python Flex Consumption function app with identity-based deployment storage, App Insights, and RBAC on storage. |
+| Stack | Scope | Region (default) | Resource group | Purpose |
+|-------|-------|------------------|----------------|---------|
+| [`azure-iac-0/`](azure-iac-0/) | Subscription | `eastus2` | `{namePrefix}-{location}-core-rg` | Primary landing zone: hub VNet, **new** private DNS zones, Key Vault, and core storage. |
+| [`azure-iac-1/`](azure-iac-1/) | Subscription | `centralus` | `{namePrefix}-{location}-core-rg` | Secondary-region hub: VNet peering to `azure-iac-0`, links to **existing** DNS zones in the primary region. |
+| [`wl01/`](wl01/) | Subscription | `centralus` | `{namePrefix}-{location}-rg` | Sample workload: Python Flex Consumption function app with private networking, private endpoints, and identity-based storage access. |
 
 Default parameter values for each stack live in the matching `main.bicepparam` file.
 
-#### `azure-iac-0` vs `azure-iac-1`
+### Recommended deployment order
 
-Both stacks deploy a hub network, Key Vault, and core storage into `{namePrefix}-{location}-core-rg`. The main difference is DNS:
+1. **azure-iac-0** — Creates the primary hub (`10.0.0.0/16`), company private DNS zone, `privatelink.AzureWebSites.net`, and storage private link zones (`blob`, `queue`, `table`).
+2. **azure-iac-1** — Deploys the secondary hub (`10.1.0.0/16`), peers it to the eastus2 hub, and links the new VNet to DNS zones in `js-eastus2-core-rg`.
+3. **wl01** — Deploys a spoke (`10.2.0.0/20`), peers to the regional hub, links to shared DNS zones, and provisions the function app stack with private endpoints.
 
-- **azure-iac-0** creates a private DNS zone (`{namePrefix}-company.com`) and registers the hub VNet with it.
-- **azure-iac-1** references an existing zone (for example, one created by `azure-iac-0` in another region) via the `dnsResourceGroup` parameter and only creates the VNet link.
+Update `main.bicepparam` in each stack to match your subscription naming before deploying.
 
-Use `azure-iac-0` for the first region. Use `azure-iac-1` when adding a hub in a second region that should share the same private DNS zone.
+## Stack details
 
-### Hub network layout
+### azure-iac-0 — primary landing zone
 
-[`modules/virtualnetwork.bicep`](modules/virtualnetwork.bicep) deploys hub or spoke VNets. Hub subnets are carved from the VNet CIDR with `cidrSubnet()`:
+[`main.bicep`](azure-iac-0/main.bicep) creates `{namePrefix}-{location}-core-rg` and delegates networking to [`network/network.bicep`](azure-iac-0/network/network.bicep).
+
+| Component | Description |
+|-----------|-------------|
+| Hub VNet | Firewall, Gateway, Bastion, and optional workload subnets via [`modules/virtualnetwork.bicep`](modules/virtualnetwork.bicep). |
+| Private DNS | Company domain zone, `privatelink.AzureWebSites.net`, and per-service storage zones with VNet links. |
+| Key Vault | RBAC-enabled vault with template-deployment access. |
+| Storage | Core `StorageV2` account for diagnostics and shared artifacts. |
+
+Default address space: `10.0.0.0/16` in `eastus2`.
+
+### azure-iac-1 — secondary-region hub
+
+Same core resources as `azure-iac-0`, but networking differs:
+
+| Component | Description |
+|-----------|-------------|
+| Hub VNet | New hub in the second region (`10.1.0.0/16` by default). |
+| VNet peering | Bidirectional peering to the `azure-iac-0` hub via [`modules/networkpeering.bicep`](modules/networkpeering.bicep). |
+| Private DNS | References **existing** zones in `hubResourceGroupName` (default `js-eastus2-core-rg`) and creates VNet links only. |
+
+Deploy this stack after `azure-iac-0` so the shared DNS zones already exist.
+
+### wl01 — function app workload
+
+[`main.bicep`](wl01/main.bicep) orchestrates domain-specific modules under the workload resource group:
+
+```
+wl01/
+├── main.bicep              # Subscription entry point
+├── main.bicepparam         # Environment parameters
+├── network/network.bicep   # Spoke VNet, subnets, peering, DNS links
+├── identity/identity.bicep # User-assigned managed identity
+├── storage/storage.bicep   # Storage account, RBAC, storage private endpoints
+├── insights/app-insights.bicep
+└── compute/function-app.bicep  # App Service plan, function app, inbound PE
+```
+
+| Component | Description |
+|-----------|-------------|
+| Spoke VNet | `10.2.0.0/20` with `PrivateEndpointSubnet` (`10.2.1.0/24`) and `FunctionAppSubnet` (`10.2.2.0/24`, delegated to `Microsoft.App/environments`). |
+| Hub peering | Peers the spoke to the regional hub (`hubNetworkName` / `hubResourceGroupName`). |
+| DNS | Links the spoke to existing company, storage, and function-app private link zones in `dnsResourceGroupName`. |
+| Identity | User-assigned managed identity granted storage data roles on the workload account. |
+| Storage | Private `StorageV2` account with blob container; private endpoints for `blob`, `queue`, and `table`. |
+| Compute | Python 3.13 Flex Consumption function app (SKU FC1) with VNet integration, disabled public access, identity-based deployment storage, and an inbound private endpoint. |
+| Monitoring | Log Analytics workspace and Application Insights component. |
+
+## Network layout
+
+### Hub subnets
+
+[`modules/virtualnetwork.bicep`](modules/virtualnetwork.bicep) carves hub subnets from the VNet CIDR with `cidrSubnet()`:
 
 | Subnet | Default prefix length |
 |--------|------------------------|
@@ -65,37 +103,52 @@ Use `azure-iac-0` for the first region. Use `azure-iac-1` when adding a hub in a
 | `AzureFirewallManagementSubnet` | /26 |
 | `AzureBastionSubnet` | /26 |
 
-Set `networkType` to `hub` or `spoke`. Additional subnets can be merged in via the `subnets` parameter. The module exposes `subnetIDs`, `subnetNames`, `NetworkResourceID`, and `NetworkName` for downstream stacks (for example, private endpoints).
+Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subnets` parameter. The module outputs `subnetIDs`, `subnetNames`, `NetworkResourceID`, and `NetworkName`.
+
+### Address spaces (defaults)
+
+| Stack | CIDR | Region |
+|-------|------|--------|
+| azure-iac-0 | `10.0.0.0/16` | eastus2 |
+| azure-iac-1 | `10.1.0.0/16` | centralus |
+| wl01 spoke | `10.2.0.0/20` | centralus |
 
 ## Repository structure
 
 ```
 .
-├── modules/                              # Shared Bicep modules
+├── modules/                              # Shared Bicep modules (reused across stacks)
 │   ├── virtualnetwork.bicep              # Hub/spoke VNet and subnets (AVM)
 │   ├── networkpeering.bicep              # Bidirectional VNet peering (AVM)
 │   ├── keyvault.bicep                    # Key Vault with RBAC (AVM)
-│   ├── storage.bicep                     # StorageV2 account and optional containers (AVM)
-│   ├── privateendpoints.bicep            # Blob private endpoint (AVM)
+│   ├── storage.bicep                     # StorageV2 account, containers, RBAC (AVM)
+│   ├── privateendpoints.bicep            # Generic private endpoint with DNS zone group (AVM)
 │   ├── appserviceplan.bicep              # Linux Flex Consumption plan, SKU FC1 (AVM)
 │   ├── appinsight.bicep                  # Log Analytics workspace + App Insights (AVM)
 │   └── functionapp.bicep                 # Python Flex Consumption function app (AVM)
 ├── azure-iac-0/                          # Primary landing-zone deployment
 │   ├── main.bicep
-│   └── main.bicepparam
-├── azure-iac-1/                          # Secondary-region landing zone (shared DNS)
+│   ├── main.bicepparam
+│   └── network/network.bicep
+├── azure-iac-1/                          # Secondary-region landing zone
 │   ├── main.bicep
-│   └── main.bicepparam
+│   ├── main.bicepparam
+│   └── network/network.bicep
 ├── wl01/                                 # Sample function-app workload
 │   ├── main.bicep
-│   └── main.bicepparam
+│   ├── main.bicepparam
+│   ├── network/network.bicep
+│   ├── identity/identity.bicep
+│   ├── storage/storage.bicep
+│   ├── insights/app-insights.bicep
+│   └── compute/function-app.bicep
 └── .github/workflows/
     ├── iac-0-*.yml                       # PR tests and main-branch deploy for azure-iac-0
     ├── iac-1-*.yml                       # PR tests and deploy for azure-iac-1
     └── wl01-*.yml                        # PR tests and deploy for wl01
 ```
 
-New workload stacks can reference shared modules with a relative path (for example, `../modules/storage.bicep`).
+New workload stacks can reference shared modules with a relative path (for example, `../modules/storage.bicep`) and follow the `wl01` pattern of domain folders under the stack root.
 
 ## Shared modules
 
@@ -104,8 +157,8 @@ New workload stacks can reference shared modules with a relative path (for examp
 | `virtualnetwork.bicep` | VNet with type-specific default subnets; supports custom subnet overrides. |
 | `networkpeering.bicep` | Two-way peering between existing VNets in different resource groups. |
 | `keyvault.bicep` | RBAC-enabled Key Vault with template-deployment access. |
-| `storage.bicep` | StorageV2 account, optional blob containers, and RBAC assignments. |
-| `privateendpoints.bicep` | Private endpoint for blob storage on an existing subnet. |
+| `storage.bicep` | StorageV2 account, optional blob containers, network ACLs, and RBAC assignments. |
+| `privateendpoints.bicep` | Private endpoint with configurable `groupIds` (storage subresources, `sites`, etc.) and DNS zone group. |
 | `appserviceplan.bicep` | Reserved Linux App Service plan (FC1) for Flex Consumption. |
 | `appinsight.bicep` | Log Analytics workspace linked to an Application Insights component. |
 | `functionapp.bicep` | Python 3.13 Flex Consumption function app with user-assigned identity and blob deployment storage. |
@@ -165,7 +218,15 @@ az deployment sub what-if \
   --parameters azure-iac-0/main.bicepparam
 ```
 
-Use the same pattern for `azure-iac-1/` and `wl01/`, matching the `--location` value to the region in each stack's parameter file.
+Use the same pattern for the other stacks, matching `--location` to the deployment region for that stack:
+
+| Stack | `--location` |
+|-------|--------------|
+| azure-iac-0 | `eastus2` |
+| azure-iac-1 | `centralus` |
+| wl01 | `centralus` |
+
+> **Note:** Subscription deployment `--location` is the metadata region for the deployment itself. Resource regions are set by each template's `location` parameter and resource group scope.
 
 ## CI/CD
 
@@ -177,7 +238,9 @@ Each deployment stack has three GitHub Actions workflows:
 | `*-lint-validate-deploy.yml` | Push to `main` (path-filtered) | Lint, validate, deploy to the `production` environment |
 | `*-manual-deploy.yml` | `workflow_dispatch` | Lint, validate, deploy on demand |
 
-`azure-iac-0` auto-deploys when files under `azure-iac-0/**` change on `main`. The same path-filter pattern applies to `azure-iac-1` and `wl01`.
+Main-branch deploys use **deployment stacks** (`type: deploymentStack`) with `action-on-unmanage-resources: delete`, so resources removed from a template are deleted from Azure on the next deploy.
+
+Path filters isolate changes: `azure-iac-0/**`, `azure-iac-1/**`, and `wl01/**` each trigger only their own workflows.
 
 ### Required GitHub configuration
 
@@ -186,7 +249,7 @@ Each deployment stack has three GitHub Actions workflows:
 | `AZURE_CLIENT_ID` | Secret | OIDC application client ID |
 | `AZURE_TENANT_ID` | Secret | Microsoft Entra tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Secret | Target subscription |
-| `AZURE_RESOURCE_GROUP_NAME` | Secret / variable | Resource group context for validate and deploy steps |
+| `AZURE_RESOURCE_GROUP_NAME` | Secret or variable | Resource group context for validate and deploy steps |
 
 Configure [federated credentials](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust) on the app registration for passwordless GitHub Actions login.
 

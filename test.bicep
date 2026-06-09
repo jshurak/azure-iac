@@ -1,10 +1,11 @@
 
-
+@description('Existing hub virtual network used for subnet testing.')
 resource network 'Microsoft.Network/virtualNetworks@2025-07-01' existing = {
   name: 'js-centralus-hub-vnet'
 }
 
 
+@description('Subnet delegated to Azure Functions Flex Consumption for testing.')
 module subnets 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
   params: {
     name: 'PrivateEndpointSubnet'

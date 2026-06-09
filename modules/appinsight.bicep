@@ -11,6 +11,7 @@ var vLogAnalyticsName = !empty(logAnalyticsName) ? logAnalyticsName : '${namePre
 var vAppInsightsName = !empty(appInsightsName) ? appInsightsName : '${namePrefix}-appinsights'
 
 
+@description('Log Analytics workspace for function app diagnostics and telemetry retention.')
 module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.15.1' = {
   params: {
     name: vLogAnalyticsName
@@ -20,6 +21,7 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.15.1' = 
 }
 
 
+@description('Application Insights component linked to the Log Analytics workspace.')
 module appInsights 'br/public:avm/res/insights/component:0.7.2' = {
   params: {
     name: vAppInsightsName

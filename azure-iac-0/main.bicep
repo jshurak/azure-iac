@@ -23,8 +23,10 @@ param CIDR string
 @description('Name of the hub virtual network.')
 param networkName string
 
-@description('Owner name applied as a tag on deployed resources (for example, a team or individual).')
-param ownerName string
+
+@description('Company domain for the private dns zone.')
+param companyDomain string
+
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -32,76 +34,17 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
-@description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../modules/virtualnetwork.bicep' = {
+
+@description('Hub virtual network, private DNS zones, and storage private link DNS for the landing zone.')
+module coreNetwork './network/network.bicep' = {
   scope: coreResourceGroup
-  params:{
-    networkType: 'hub'
+  params: {
+    companyDomain: companyDomain
+    resourceGroupName: coreResourceGroup.name
     networkName: networkName
-    location: location
-    CIDR: CIDR
-    ipAddressSpace: ipAddressSpace 
     namePrefix: namePrefix
-  }
-}
-
-
-@description('Private dns zone for our production environment.')
-module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${namePrefix}-company.com'
-    location: 'global'
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-      
-    }
-  }
-}
-@description('Private dns zone for our production environment.')
-module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: coreResourceGroup
-  params: {
-    name: 'privatelink.AzureWebSites.net'
-    location: 'global'
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-      
-    }
-  }
-}
-
-
-
-module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${networkName}-dns-link'
-    privateDnsZoneName: customPrivateDNSZone.outputs.name
-    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: true
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-    }
-  }
-}
-
-module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: coreResourceGroup
-  params: {
-    name: '${networkName}-websites-dns-link'
-    privateDnsZoneName: websitesDNSZone.outputs.name
-    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: false
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-    }
+    CIDR: CIDR
+    ipAddressSpace: ipAddressSpace
   }
 }
 
@@ -111,7 +54,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
   params: {
     location: location
-    namePrefix: '${namePrefix}-${location}'
+    namePrefix: '${namePrefix}-${coreResourceGroup.location}'
   }
 }
 
@@ -121,6 +64,6 @@ module coreStorage '../modules/storage.bicep' = {
   params: {
     namePrefix: namePrefix
     storageSku: storageSku
-    storageAccountName: '${namePrefix}${location}corestorage'
+    storageAccountName: '${namePrefix}${coreResourceGroup.location}corestorage'
   }
 }
