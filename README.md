@@ -8,50 +8,33 @@ Each template documents its contract with `metadata description` and `@descripti
 
 The repository models a hub-and-spoke design across two regions. The first landing-zone stack creates shared private DNS zones; the second region links to those zones and peers its hub. Workloads deploy into spoke networks that peer with a regional hub and consume the shared DNS infrastructure.
 
+**Deployment order** — each stack depends on the one before it:
+
+```mermaid
+flowchart LR
+  A0["azure-iac-0<br/>eastus2<br/>Hub + DNS zones<br/>Key Vault + storage"]
+  A1["azure-iac-1<br/>centralus<br/>Hub + peering<br/>DNS zone links"]
+  WL["wl01<br/>centralus<br/>Spoke + function app<br/>Private endpoints"]
+
+  A0 --> A1 --> WL
+```
+
+**Network topology** — hubs, spoke, and shared DNS:
+
 ```mermaid
 flowchart TB
-  subgraph eastus2["azure-iac-0 (eastus2)"]
-    RG0["js-eastus2-core-rg"]
-    H0["Hub VNet 10.0.0.0/16"]
-    DNS0["Private DNS zones"]
-    KV0["Key Vault"]
-    SA0["Core storage"]
-    RG0 --> H0
-    RG0 --> DNS0
-    RG0 --> KV0
-    RG0 --> SA0
-    H0 --> DNS0
-  end
+  DNS["Private DNS zones<br/>js-eastus2-core-rg"]
 
-  subgraph centralus["azure-iac-1 (centralus)"]
-    RG1["js-centralus-core-rg"]
-    H1["Hub VNet 10.1.0.0/16"]
-    KV1["Key Vault"]
-    SA1["Core storage"]
-    RG1 --> H1
-    RG1 --> KV1
-    RG1 --> SA1
-    H1 -.->|"VNet peering"| H0
-    H1 -.->|"DNS zone links"| DNS0
-  end
+  H0["Hub VNet<br/>10.0.0.0/16 · eastus2"]
+  H1["Hub VNet<br/>10.1.0.0/16 · centralus"]
+  SP["Spoke VNet<br/>10.2.0.0/20 · centralus"]
 
-  subgraph wl01stack["wl01 (centralus spoke)"]
-    WRG["wl01-centralus-rg"]
-    SPOKE["Spoke VNet 10.2.0.0/20"]
-    ID["User-assigned identity"]
-    WSA["Workload storage + PEs"]
-    AI["App Insights + Log Analytics"]
-    FA["Flex Consumption function app + PE"]
-    WRG --> SPOKE
-    WRG --> ID
-    WRG --> WSA
-    WRG --> AI
-    WRG --> FA
-    SPOKE --> FA
-    SPOKE --> WSA
-    SPOKE -.->|"VNet peering"| H1
-    SPOKE -.->|"DNS zone links"| DNS0
-  end
+  H0 <-->|peering| H1
+  H1 <-->|peering| SP
+
+  DNS --- H0
+  DNS --- H1
+  DNS --- SP
 ```
 
 ### Deployment stacks
