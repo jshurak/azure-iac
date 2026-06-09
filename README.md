@@ -1,6 +1,6 @@
 # Azure IaC
 
-Infrastructure-as-code for a multi-region Azure landing zone and a sample private workload, built with [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview). Templates compose [Azure Verified Modules (AVM)](https://github.com/Azure/bicep-registry-modules) where possible and share reusable modules from [`modules/`](modules/).
+Infrastructure-as-code for a multi-region Azure landing zone and a sample private workload, built with [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview). Deployment templates consume modules from a private Bicep registry (`br/JSRegistry:...`) and [Azure Verified Modules (AVM)](https://github.com/Azure/bicep-registry-modules) where a public module is used directly.
 
 Each template documents its contract with `metadata description` and `@description` decorators. Parameter files (`.bicepparam`) use matching `//` comments where Bicep decorators are not supported.
 
@@ -46,7 +46,7 @@ Update `main.bicepparam` in each stack to match your subscription naming before 
 
 | Component | Description |
 |-----------|-------------|
-| Hub VNet | Firewall, Gateway, Bastion, and optional workload subnets via [`modules/virtualnetwork.bicep`](modules/virtualnetwork.bicep). |
+| Hub VNet | Firewall, Gateway, Bastion, and optional workload subnets via `br/JSRegistry:network/virtual-network:v1.0.0`. |
 | Private DNS | Company domain zone, `privatelink.AzureWebSites.net`, and per-service storage zones with VNet links. |
 | Key Vault | RBAC-enabled vault with template-deployment access. |
 | Storage | Core `StorageV2` account for diagnostics and shared artifacts. |
@@ -60,7 +60,7 @@ Same core resources as `azure-iac-0`, but networking differs:
 | Component | Description |
 |-----------|-------------|
 | Hub VNet | New hub in the second region (`10.1.0.0/16` by default). |
-| VNet peering | Bidirectional peering to the `azure-iac-0` hub via [`modules/networkpeering.bicep`](modules/networkpeering.bicep). |
+| VNet peering | Bidirectional peering to the `azure-iac-0` hub via `br/JSRegistry:network/peering:v1.0.0`. |
 | Private DNS | References **existing** zones in `hubResourceGroupName` (default `js-eastus2-core-rg`) and creates VNet links only. |
 
 Deploy this stack after `azure-iac-0` so the shared DNS zones already exist.
@@ -94,7 +94,7 @@ wl01/
 
 ### Hub subnets
 
-[`modules/virtualnetwork.bicep`](modules/virtualnetwork.bicep) carves hub subnets from the VNet CIDR with `cidrSubnet()`:
+The `br/JSRegistry:network/virtual-network` module carves hub subnets from the VNet CIDR with `cidrSubnet()`:
 
 | Subnet | Default prefix length |
 |--------|------------------------|
@@ -117,15 +117,6 @@ Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subn
 
 ```
 .
-├── modules/                              # Shared Bicep modules (reused across stacks)
-│   ├── virtualnetwork.bicep              # Hub/spoke VNet and subnets (AVM)
-│   ├── networkpeering.bicep              # Bidirectional VNet peering (AVM)
-│   ├── keyvault.bicep                    # Key Vault with RBAC (AVM)
-│   ├── storage.bicep                     # StorageV2 account, containers, RBAC (AVM)
-│   ├── privateendpoints.bicep            # Generic private endpoint with DNS zone group (AVM)
-│   ├── appserviceplan.bicep              # Linux Flex Consumption plan, SKU FC1 (AVM)
-│   ├── appinsight.bicep                  # Log Analytics workspace + App Insights (AVM)
-│   └── functionapp.bicep                 # Python Flex Consumption function app (AVM)
 ├── azure-iac-0/                          # Primary landing-zone deployment
 │   ├── main.bicep
 │   ├── main.bicepparam
@@ -142,31 +133,46 @@ Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subn
 │   ├── storage/storage.bicep
 │   ├── insights/app-insights.bicep
 │   └── compute/function-app.bicep
-└── .github/workflows/
-    ├── iac-0-*.yml                       # PR tests and main-branch deploy for azure-iac-0
-    ├── iac-1-*.yml                       # PR tests and deploy for azure-iac-1
-    └── wl01-*.yml                        # PR tests and deploy for wl01
+├── .github/workflows/
+│   ├── iac-0-*.yml                       # PR tests and main-branch deploy for azure-iac-0
+│   ├── iac-1-*.yml                       # PR tests and deploy for azure-iac-1
+│   └── wl01-*.yml                        # PR tests and deploy for wl01
+└── z-legacy-modules/                     # Archived local module sources (not used by deployments)
+    ├── virtualnetwork.bicep
+    ├── networkpeering.bicep
+    ├── keyvault.bicep
+    ├── storage.bicep
+    ├── privateendpoints.bicep
+    ├── appserviceplan.bicep
+    ├── appinsight.bicep
+    └── functionapp.bicep
 ```
 
-New workload stacks can reference shared modules with a relative path (for example, `../modules/storage.bicep`) and follow the `wl01` pattern of domain folders under the stack root.
+New workload stacks should follow the `wl01` pattern of domain folders under the stack root and consume shared building blocks from `br/JSRegistry:...`.
 
-## Shared modules
+## Bicep registry modules
 
-| Module | Deploys |
-|--------|---------|
-| `virtualnetwork.bicep` | VNet with type-specific default subnets; supports custom subnet overrides. |
-| `networkpeering.bicep` | Two-way peering between existing VNets in different resource groups. |
-| `keyvault.bicep` | RBAC-enabled Key Vault with template-deployment access. |
-| `storage.bicep` | StorageV2 account, optional blob containers, network ACLs, and RBAC assignments. |
-| `privateendpoints.bicep` | Private endpoint with configurable `groupIds` (storage subresources, `sites`, etc.) and DNS zone group. |
-| `appserviceplan.bicep` | Reserved Linux App Service plan (FC1) for Flex Consumption. |
-| `appinsight.bicep` | Log Analytics workspace linked to an Application Insights component. |
-| `functionapp.bicep` | Python 3.13 Flex Consumption function app with user-assigned identity and blob deployment storage. |
+Active deployments reference the private `JSRegistry` Bicep registry and, in a few cases, AVM public modules directly (for example, private DNS zone links and subnet resources).
 
-Parameter details are defined in each module file. Open a `.bicep` file and hover a parameter name for inline documentation, or compile to JSON:
+| Registry module | Used for |
+|-----------------|----------|
+| `network/virtual-network:v1.0.0` | Hub and spoke VNets with type-specific default subnets. |
+| `network/peering:v1.0.0` | Bidirectional VNet peering across resource groups. |
+| `network/private-endpoint:v1.0.0` | Private endpoints with DNS zone groups. |
+| `key-vault:v1.0.0` | RBAC-enabled Key Vault. |
+| `storage/storage-account:v1.5.1` | StorageV2 accounts, containers, and RBAC. |
+| `web/app-service-plan:v1.0.0` | Linux Flex Consumption plan (FC1). |
+| `web/function-app:v1.0.0` | Python Flex Consumption function app with identity-based deployment storage. |
+| `ops/app-insight:v1.0.0` | Log Analytics workspace and Application Insights. |
+
+### Legacy local modules
+
+[`z-legacy-modules/`](z-legacy-modules/) contains the original local Bicep wrappers that preceded the private registry. Nothing in the deployment stacks references this folder anymore; it is kept for reference and sorts last in the repository tree. Published registry modules supersede these files.
+
+Parameter details are defined in each template file. Open a `.bicep` file and hover a parameter name for inline documentation, or compile to JSON:
 
 ```bash
-az bicep build --file modules/virtualnetwork.bicep
+az bicep build --file azure-iac-0/main.bicep
 # Inspect parameters[].metadata.description in the generated JSON
 ```
 
