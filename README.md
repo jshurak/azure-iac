@@ -19,23 +19,6 @@ flowchart LR
   A0 --> A1 --> WL
 ```
 
-**Network topology** — hubs, spoke, and shared DNS:
-
-```mermaid
-flowchart TB
-  DNS["Private DNS zones<br/>js-eastus2-core-rg"]
-
-  H0["Hub VNet<br/>10.0.0.0/16 · eastus2"]
-  H1["Hub VNet<br/>10.1.0.0/16 · centralus"]
-  SP["Spoke VNet<br/>10.2.0.0/20 · centralus"]
-
-  H0 <-->|peering| H1
-  H1 <-->|peering| SP
-
-  DNS --- H0
-  DNS --- H1
-  DNS --- SP
-```
 
 ### Deployment stacks
 
