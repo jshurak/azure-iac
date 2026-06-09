@@ -141,3 +141,9 @@ module websiteDNSLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 
 
 output subnetIDs array = coreVNet.outputs.subnetIDs
+
+@description('Names of subnets created in the hub virtual network.')
+output subnetNames array = coreVNet.outputs.subnetNames
+
+@description('Resource ID of the workload subnet for VM deployments.')
+output workloadSubnetId string = coreVNet.outputs.subnetIDs[indexOf(coreVNet.outputs.subnetNames, 'workload')]

@@ -27,3 +27,17 @@ param hubResourceGroupName = 'js-eastus2-core-rg'
 // Company domain for the private dns zone.
 param companyDomain = 'js-company.com'
 
+// Set to true to deploy a Linux VM with a public IP in the workload subnet.
+param deployLinuxVm = true
+
+// Your public IP in CIDR notation (for example, 203.0.113.10/32).
+param allowedSshSourceIp = '141.152.229.55'
+
+// SSH public key contents (ssh-rsa AAAA... or ssh-ed25519 AAAA...).
+param sshPublicKey = az.getSecret(subscription, keyVaultResourceGroupName, keyVaultName, 'ssh-ICE')
+
+
+//paramters to be passed in from the pipeline
+param subscription = ''
+param keyVaultResourceGroupName = ''
+param keyVaultName = ''
