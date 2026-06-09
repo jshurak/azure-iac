@@ -107,7 +107,7 @@ module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 
 
 @description('Bidirectional peering between the hub and spoke virtual networks.')
-module peering '../../modules/networkpeering.bicep' = {
+module peering 'br/JSRegistry:network/peering:v1.0.0' = {
   scope: subscription()
   params: {
     net1ResourceGroup: hubResourceGroupName
