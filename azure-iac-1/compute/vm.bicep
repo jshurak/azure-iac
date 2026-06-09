@@ -22,7 +22,6 @@ module vmPublicIP 'br/public:avm/res/network/public-ip-address:0.12.0' = {
   }
 }
 
-
 module vm 'br/public:avm/res/compute/virtual-machine:0.22.1' = {
   params: {
     name: '${namePrefix}-test-vm'
@@ -32,7 +31,10 @@ module vm 'br/public:avm/res/compute/virtual-machine:0.22.1' = {
         ipConfigurations: [
           {
             name: vNicName
-          subnetResourceId: workLoadSubnetID
+            subnetResourceId: workLoadSubnetID
+            pipConfiguration: {
+              name: vmPublicIP.outputs.name
+            }       
           }
         ]
       }
@@ -51,7 +53,7 @@ module vm 'br/public:avm/res/compute/virtual-machine:0.22.1' = {
       offer: 'ubuntu-26_04-lts'
       sku: 'server'
       version: '26.04.202604210'
-    }    
+    }
     publicKeys: [
       {
         path: '/home/adminuser/.ssh/authorized_keys'
