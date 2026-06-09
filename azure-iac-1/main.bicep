@@ -30,6 +30,16 @@ param companyDomain string
 param hubNetworkName string
 
 
+@description('SSH key for the test vm.')
+@secure()
+param sshKey string
+
+#disable-next-line no-unused-params
+param subscription string
+#disable-next-line no-unused-params
+param keyVaultResourceGroupName string
+#disable-next-line no-unused-params
+param keyVaultName string
 
 
 
@@ -80,3 +90,12 @@ module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
 }
 
 
+module testVM './compute/vm.bicep' = {
+  scope: coreResourceGroup
+  params: {
+    namePrefix: namePrefix
+    workLoadSubnetID: coreNetwork.outputs.subnetIDs[4]
+    nicName: '${namePrefix}-test-vm-nic'
+    sshKey: sshKey
+  }
+}

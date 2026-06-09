@@ -116,3 +116,6 @@ module storageDNSLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
     }
   }
 ]
+
+
+output subnetIDs array = coreVNet.outputs.subnetIDs

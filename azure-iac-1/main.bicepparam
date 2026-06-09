@@ -26,3 +26,10 @@ param hubResourceGroupName = 'js-eastus2-core-rg'
 
 // Company domain for the private dns zone.
 param companyDomain = 'js-company.com'
+
+param subscription = ''
+param keyVaultResourceGroupName = ''
+param keyVaultName = ''
+
+// ssh key for test vm
+param sshKey = az.getSecret(subscription, keyVaultResourceGroupName, keyVaultName, 'ssh-ICE')
