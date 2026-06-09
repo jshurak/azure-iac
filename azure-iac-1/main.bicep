@@ -48,6 +48,15 @@ param vmAdminUsername string = 'azureuser'
 @description('VM size SKU for the Linux VM.')
 param vmSize string = 'Standard_B2s'
 
+#disable-next-line no-unused-params
+param subscription string
+#disable-next-line no-unused-params
+param keyVaultResourceGroupName string
+#disable-next-line no-unused-params
+param keyVaultName string
+
+
+
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -91,7 +100,7 @@ module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   }
 }
 
-@description('Optional Linux VM with public IP and SSH restricted to a trusted source IP.')
+@description('Linux VM with public IP and SSH restricted to a trusted source IP.')
 module linuxVm './compute/vm.bicep' = if (deployLinuxVm) {
   scope: coreResourceGroup
   params: {
