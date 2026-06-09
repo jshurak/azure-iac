@@ -22,6 +22,43 @@ param peSubnetResourceId string
 
 var localResourceGroup = az.resourceGroup()
 //build storage account and grant rbac permission to the identity
+
+
+module storage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
+  scope: localResourceGroup
+  params: {
+    storageAccountName: '${namePrefix}st${uniqueString(localResourceGroup.id)}'
+    storageSku: storagesku
+    containerNames: ['${namePrefix}-app-container']
+    blobPublicAccess: false
+    roleAssignments: [
+      {
+        principalId: identityPrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Contributor'
+      }
+      {
+        principalId: identityPrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Blob Data Owner'
+      }
+      {
+        principalId: identityPrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Table Data Contributor'
+      }
+      {
+        principalId: identityPrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: 'Storage Queue Data Contributor'
+      }
+    ]
+  }
+}
+
+
+
+/*
 @description('Storage account, blob container, and RBAC for the function app deployment and triggers.')
 module storage '../../modules/storage.bicep' = {
   scope: localResourceGroup
@@ -54,7 +91,7 @@ module storage '../../modules/storage.bicep' = {
     ]
   }
 }
-
+*/
 
 //Loops through the storageEndpoints array and creates a private endpoint for each endpoint
 @description('Private endpoints connecting the spoke VNet to storage subresources.')
