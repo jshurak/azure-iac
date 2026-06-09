@@ -10,6 +10,7 @@ it will leverage a private endpoint to communicate privately, with existing priv
 it will create the app insight and log analytics workspace
 an app service plan
 the python function app
+
 */
 
 @description('Name of the hub virtual network to peer with.')
