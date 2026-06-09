@@ -60,9 +60,9 @@ module vm 'br/public:avm/res/compute/virtual-machine:0.22.1' = {
     disablePasswordAuthentication: true
     imageReference: {
       publisher: 'Canonical'
-      offer: '0001-com-ubuntu-server-jammy'
-      sku: '22_04-lts-gen2'
-      version: 'latest'
+      offer: 'ubuntu-26_04-lts'
+      sku: 'server'
+      version: '26.04.202604210'
     }
     publicKeys: [
       {
