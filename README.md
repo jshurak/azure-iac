@@ -38,17 +38,6 @@ flowchart TB
 
 Solid arrows are peering links deployed by this repository; dashed elements show how future regional hubs and spokes would attach. The shared private DNS zones live alongside the central hub in its resource group — individual DNS zone links (not shown) point every VNet back at those zones.
 
-**Deployment order** — each stack depends on the one before it:
-
-```mermaid
-flowchart LR
-  A0["azure-iac-0<br/>eastus2<br/>Hub + DNS zones<br/>Key Vault + storage"]
-  A1["azure-iac-1<br/>centralus<br/>Hub + peering<br/>DNS zone links"]
-  WL["wl01<br/>centralus<br/>Spoke + function app<br/>Private endpoints"]
-
-  A0 --> A1 --> WL
-```
-
 
 ### Deployment stacks
 
