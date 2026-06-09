@@ -114,18 +114,4 @@ module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' 
   }
 ]
 
-/*
-@description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
-module storageDNSink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = [
-  for (endpoint, i) in storageEndpoints: {
-    scope: az.resourceGroup(resourceGroupName)
-    params: {
-      name: '${networkName}-dns-link'
-      privateDnsZoneName: storagePrivateDNSZone[i].outputs.name
-      virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-      location: 'global'
-      registrationEnabled: false
-    }
-  }
-]
-*/
+
