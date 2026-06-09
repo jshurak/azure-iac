@@ -47,7 +47,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}, keyVaultResourceGroupName: ${{ secrets.AZURE_KEYVAULT_RESOURCEGROUP_NAME }}, keyVaultName: ${{secrets.AZURE_KEYVAULT_NAME}}}'
           location: centralus
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
@@ -60,7 +60,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
+          parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}, keyVaultResourceGroupName: ${{ secrets.AZURE_KEYVAULT_RESOURCEGROUP_NAME }}, keyVaultName: ${{secrets.AZURE_KEYVAULT_NAME}}}'
           location: centralus
       - name: Run Checkov actions/checkout
         id:  checkov
