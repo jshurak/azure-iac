@@ -47,7 +47,7 @@ param storageEndpoints array = [
 
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../../modules/virtualnetwork.bicep' = {
+module coreVNet 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   scope: localResrourceGroup
   params:{
     networkType: 'hub'
@@ -62,7 +62,7 @@ module coreVNet '../../modules/virtualnetwork.bicep' = {
 
 
 @description('peering between central us hub and east us hub')
-module peering '../../modules/networkpeering.bicep' = {
+module peering 'br/JSRegistry:network/peering:v1.0.0' = {
   scope: subscription()
   params: {
     net1ResourceGroup: hubResourceGroupName

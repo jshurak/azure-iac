@@ -35,7 +35,7 @@ var localResourceGroup = az.resourceGroup()
 
 
 @description('Flex Consumption App Service plan for the function app.')
-module appPlan '../../modules/appserviceplan.bicep' = {
+module appPlan 'br/JSRegistry:web/app-service-plan:v1.0.0' = {
   scope: localResourceGroup
   params: {
     appServicePlanName: '${namePrefix}-appservice-plan'
@@ -43,7 +43,7 @@ module appPlan '../../modules/appserviceplan.bicep' = {
 }
 
 @description('Python Flex Consumption function app with identity-based deployment storage.')
-module functionApp '../../modules/functionapp.bicep' = {
+module functionApp 'br/JSRegistry:web/function-app:v1.0.0' = {
   scope: localResourceGroup
   params: {
     functionAppName: functionAppName
@@ -59,7 +59,7 @@ module functionApp '../../modules/functionapp.bicep' = {
 }
 
 @description('Private endpoint for inbound access to the function app.')
-module appPrivateEndpoint '../../modules/privateendpoints.bicep' = {
+module appPrivateEndpoint 'br/JSRegistry:network/private-endpoint:v1.0.0' = {
   scope: localResourceGroup
   params: {
     privateDnsZoneResourceId: functionAppPrivateDnsZoneResourceId

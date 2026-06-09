@@ -50,7 +50,7 @@ module coreNetwork './network/network.bicep' = {
 
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
-module coreKeyvault '../modules/keyvault.bicep' = {
+module coreKeyvault 'br/JSRegistry:key-vault:v1.0.0' = {
   scope: coreResourceGroup
   params: {
     location: location
@@ -59,7 +59,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
 }
 
 @description('Core storage account for diagnostics, artifacts, or shared blob data.')
-module coreStorage '../modules/storage.bicep' = {
+module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   scope: coreResourceGroup
   params: {
     namePrefix: namePrefix
