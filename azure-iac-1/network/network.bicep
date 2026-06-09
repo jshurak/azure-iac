@@ -118,4 +118,26 @@ module storageDNSLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 ]
 
 
+@description('Existing private website dns zone in the hub resource group.')
+resource privateWebsiteDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  scope: resourceGroup(hubResourceGroupName)
+  name: 'privatelink.AzureWebSites.net'
+}
+
+@description('Links the hub VNet to the existing private website DNS zone for auto-registration.')
+module websiteDNSLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: resourceGroup(hubResourceGroupName)
+  params: {
+    name: '${networkName}-website-dns-link'
+    privateDnsZoneName: privateWebsiteDNSZone.name
+    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
+    location: 'global'
+    registrationEnabled: false
+
+  }
+}
+
+
+
+
 output subnetIDs array = coreVNet.outputs.subnetIDs
