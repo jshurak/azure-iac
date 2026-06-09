@@ -1,6 +1,6 @@
 param namePrefix string
 param functionAppName string
-param virtualNetworkSubnetResourceId string
+param OutbountVirtualNetworkSubnetResourceId string
 param storageAccountResourceID string
 param storageAccountName string
 param userAssignedIdentityClientID string
