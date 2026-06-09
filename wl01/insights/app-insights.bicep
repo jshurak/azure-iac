@@ -3,7 +3,7 @@ param namePrefix string
 
 var localResourceGroup = az.resourceGroup()
 @description('Application Insights and Log Analytics workspace for the function app.')
-module appInsight '../../modules/appinsight.bicep' = {
+module appInsight 'br/JSRegistry:ops/app-insight:v1.0.0' = {
   scope: localResourceGroup
   params: {
     namePrefix: namePrefix
