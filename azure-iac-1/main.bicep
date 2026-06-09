@@ -36,8 +36,10 @@ param sshKey string
 
 #disable-next-line no-unused-params
 param subscription string
+
 #disable-next-line no-unused-params
 param keyVaultResourceGroupName string
+
 #disable-next-line no-unused-params
 param keyVaultName string
 
