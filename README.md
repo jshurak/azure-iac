@@ -14,23 +14,16 @@ The central hub in `eastus2` hosts the shared private DNS zones for the entire e
 
 ```mermaid
 flowchart TB
-  subgraph central["eastus2 — central hub (azure-iac-0)"]
-    HUB0["Hub VNet<br/>10.0.0.0/16"]
-    DNS["Shared private DNS zones<br/>company zone · privatelink.azurewebsites.net<br/>blob · queue · table"]
-  end
-
-  subgraph region1["centralus — regional hub (azure-iac-1)"]
-    HUB1["Hub VNet<br/>10.1.0.0/16"]
-  end
-
-  subgraph wl["centralus — workload (wl01)"]
-    SPOKE["Spoke VNet<br/>10.2.0.0/20<br/>Function app + private endpoints"]
-  end
+  HUB0["Central hub VNet — eastus2<br/>azure-iac-0<br/>10.0.0.0/16"]
+  DNS["Shared private DNS zones<br/>company zone<br/>privatelink.azurewebsites.net<br/>blob · queue · table"]
+  HUB1["Regional hub VNet — centralus<br/>azure-iac-1<br/>10.1.0.0/16"]
+  SPOKE["Workload spoke VNet — centralus<br/>wl01 · 10.2.0.0/20<br/>Function app +<br/>private endpoints"]
 
   HUBX["Potential regional hub<br/>(e.g. westus2)"]
   HUBY["Potential regional hub<br/>(e.g. westeurope)"]
   SPOKEX["Future spokes"]
 
+  HUB0 --- DNS
   HUB1 <-- "VNet peering" --> HUB0
   SPOKE <-- "VNet peering" --> HUB1
   HUBX <-. "VNet peering" .-> HUB0
@@ -43,7 +36,7 @@ flowchart TB
   style SPOKEX stroke-dasharray: 5 5
 ```
 
-Solid lines are peering links deployed by this repository; dashed elements show how future regional hubs and spokes would attach. DNS zone links (not shown) point every VNet back at the shared zones in the central hub's resource group.
+Solid arrows are peering links deployed by this repository; dashed elements show how future regional hubs and spokes would attach. The shared private DNS zones live alongside the central hub in its resource group — individual DNS zone links (not shown) point every VNet back at those zones.
 
 **Deployment order** — each stack depends on the one before it:
 
