@@ -26,6 +26,7 @@ param hubResourceGroupName string
 @description('Company domain for the private dns zone.')
 param companyDomain string
 
+@description('Name of the hub virtual network to peer with.')
 param hubNetworkName string
 
 
@@ -44,6 +45,7 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 
 
+@description('Hub virtual network with cross-region peering and private DNS zone links.')
 module coreNetwork './network/network.bicep' = {
   scope: coreResourceGroup
   params: {

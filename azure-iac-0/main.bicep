@@ -35,6 +35,7 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 
+@description('Hub virtual network, private DNS zones, and storage private link DNS for the landing zone.')
 module coreNetwork './network/network.bicep' = {
   scope: coreResourceGroup
   params: {

@@ -100,4 +100,5 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
 }
 
 
+@description('Full ARM resource ID of the deployed function app.')
 output resourceId string = functionApp.outputs.resourceId

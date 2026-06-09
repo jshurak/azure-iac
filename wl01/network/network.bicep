@@ -1,15 +1,30 @@
 targetScope = 'resourceGroup'
 
+@description('Name of the resource group that hosts the workload network.')
 param resourceGroupName string
+
+@description('Name of the spoke virtual network for this workload.')
 param networkName string
+
+@description('Prefix used in resource names (for example, wl01).')
 param namePrefix string
+
+@description('CIDR suffix for the VNet, including the leading slash (for example, /20).')
 param CIDR string
+
+@description('Base IPv4 address for the virtual network (without suffix).')
 param ipAddressSpace string
+
+@description('Company domain for the private DNS zone.')
 param companyDomain string
 
-
+@description('Resource group that hosts the private DNS zone used for VNet registration.')
 param dnsResourceGroupName string
+
+@description('Resource group that hosts the hub virtual network.')
 param hubResourceGroupName string
+
+@description('Name of the hub virtual network to peer with.')
 param hubNetworkName string
 
 var localResrourceGroup = az.resourceGroup(resourceGroupName)

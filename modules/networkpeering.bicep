@@ -16,16 +16,19 @@ param net2NetworkName string
 @description('When true, allows gateway transit on the peering from net1 to net2.')
 param allowGatewayTransit bool = false
 
+@description('Existing first virtual network to peer.')
 resource net1Network 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: resourceGroup(net1ResourceGroup)
   name: net1NetworkName
 }
 
+@description('Existing second virtual network to peer.')
 resource net2Network 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
   scope: resourceGroup(net2ResourceGroup)
   name: net2NetworkName
 }
 
+@description('Peering from the first virtual network to the second.')
 module net1ToNet2Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
   scope: resourceGroup(net1ResourceGroup)
   params: {
@@ -36,6 +39,7 @@ module net1ToNet2Peering 'br/public:avm/res/network/virtual-network/virtual-netw
   }
 }
 
+@description('Peering from the second virtual network to the first.')
 module net2ToNet1Peering 'br/public:avm/res/network/virtual-network/virtual-network-peering:0.2.0' = {
   scope: resourceGroup(net2ResourceGroup)
   params: {

@@ -1,13 +1,23 @@
+@description('Principal object ID of the user-assigned managed identity for storage RBAC.')
 param identityPrincipalId string
+
+@description('Prefix used in resource names (for example, wl01).')
 param namePrefix string
+
+@description('Azure Storage replication SKU (Standard_LRS or Standard_ZRS).')
 param storagesku string
+
+@description('Storage subresources to expose via private endpoints (blob, queue, table, file, or dfs).')
 param storageEndpoints array = [
   'blob'
   'queue'
   'table'
 ]
 
+@description('ARM resource IDs of existing storage private DNS zones.')
 param storagePrivateDnsZoneResourceIds array
+
+@description('ARM resource ID of the subnet that hosts storage private endpoints.')
 param peSubnetResourceId string
 
 var localResourceGroup = az.resourceGroup()
@@ -61,6 +71,11 @@ module storagePrivateEndpoints '../../modules/privateendpoints.bicep' = [
   }
 ]
 
+@description('Full ARM resource ID of the deployed storage account.')
 output resStorageID string = storage.outputs.resStorageID
+
+@description('Name of the deployed storage account.')
 output resStorageName string = storage.outputs.resStorageName
+
+@description('Blob container URL for function app deployment storage.')
 output blobContainerURL string = storage.outputs.blobContainerURL

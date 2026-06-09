@@ -1,16 +1,32 @@
 targetScope = 'resourceGroup'
 
+@description('Name of the resource group that hosts the hub network.')
 param resourceGroupName string
+
+@description('Name of the hub virtual network.')
 param networkName string
+
+@description('Prefix used in resource names (for example, js).')
 param namePrefix string
+
+@description('CIDR suffix for the VNet, including the leading slash (for example, /16).')
 param CIDR string
+
+@description('Base IPv4 address for the virtual network (without suffix).')
 param ipAddressSpace string
+
+@description('Company domain for the private DNS zone.')
 param companyDomain string
+
+@description('Additional subnets to create beyond the default hub layout (subnet name to prefix length).')
 param subnets object = {
   workload: '24'
 }
 
+@description('Resource group that hosts the remote hub virtual network for peering.')
 param hubResourceGroupName string
+
+@description('Name of the remote hub virtual network to peer with.')
 param hubNetworkName string
 
 var localResrourceGroup = az.resourceGroup(resourceGroupName)
@@ -61,11 +77,13 @@ module peering '../../modules/networkpeering.bicep' = {
 }
 
 
+@description('Existing company private DNS zone in the remote hub resource group.')
 resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   scope: resourceGroup(hubResourceGroupName)
   name: companyDomain
 }
 
+@description('Links the hub VNet to the existing company private DNS zone for auto-registration.')
 module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: resourceGroup(hubResourceGroupName)
   params: {
