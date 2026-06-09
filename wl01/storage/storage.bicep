@@ -21,9 +21,10 @@ param storagePrivateDnsZoneResourceIds array
 param peSubnetResourceId string
 
 var localResourceGroup = az.resourceGroup()
+
+
 //build storage account and grant rbac permission to the identity
-
-
+@description('Storage account for the workload.')
 module storage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   scope: localResourceGroup
   params: {
