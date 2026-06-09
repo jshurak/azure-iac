@@ -33,6 +33,22 @@ param appInsightInstrumentationKey string = ''
 @description('Full ARM resource ID of the virtual network to deploy the function app into.')
 param virtualNetworkSubnetResourceId string
 
+@description('Runtime name for the function app.  Python is the default.')
+param runTimeName string = 'python'
+
+@description('Runtime version for the function app.  Python 3.13 is the default.')
+param runTimeVersion string = '3.13'
+
+@description('Maximum instance count for the function app.  2 is the default.')
+param maximumInstanceCount int = 2
+
+@allowed([
+  512
+  2048
+  4096
+  ])
+@description('Instance memory for the function app.  512 is the default.')
+param instanceMemoryMB int = 512
 
 @allowed([
   'Disabled'
@@ -42,10 +58,14 @@ param virtualNetworkSubnetResourceId string
 param publicNetworkAccess string = 'Disabled'
 
 
+@description('Always on for the function app.  True to keep the function app running, false to allow it to sleep.')
+param alwaysOn bool = false
+
+
 var vFunctionAppName = !empty(functionAppName) ? functionAppName : '${namePrefix}-${uniqueString(resourceGroup().id)}'
 
 
-@description('Flex Consumption function app (Python 3.13) deployed via Azure Verified Modules.')
+@description('Flex Consumption function app deployed via Azure Verified Modules.')
 module functionApp 'br/public:avm/res/web/site:0.23.1' = {
   params: {
     name: vFunctionAppName
@@ -63,12 +83,12 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
         }
       }
       runtime: {
-        name: 'python'
-        version: '3.13'
+        name: runTimeName
+        version: runTimeVersion
       }
       scaleAndConcurrency: {
-        maximumInstanceCount: 2
-        instanceMemoryMB: 512
+        maximumInstanceCount: maximumInstanceCount
+        instanceMemoryMB: instanceMemoryMB
       }
     }
     managedIdentities: {
@@ -79,7 +99,7 @@ module functionApp 'br/public:avm/res/web/site:0.23.1' = {
     }
     publicNetworkAccess: publicNetworkAccess
     siteConfig: {
-      alwaysOn: false
+      alwaysOn: alwaysOn
     }
     virtualNetworkSubnetResourceId: virtualNetworkSubnetResourceId
     configs: [
