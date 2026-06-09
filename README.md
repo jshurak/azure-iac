@@ -16,8 +16,8 @@ The central hub in `eastus2` hosts the shared private DNS zones for the entire e
 flowchart TB
   HUB0["Central hub VNet — eastus2<br/>azure-iac-0<br/>10.0.0.0/16"]
   DNS["Shared private DNS zones<br/>company zone<br/>privatelink.azurewebsites.net<br/>blob · queue · table"]
-  HUB1["Regional hub VNet — centralus<br/>azure-iac-1<br/>10.1.0.0/16"]
-  SPOKE["Workload spoke VNet — centralus<br/>wl01 · 10.2.0.0/20<br/>Function app +<br/>private endpoints"]
+  HUB1["Regional hub VNet </br> centralus<br/>azure-iac-1<br/>10.1.0.0/16"]
+  SPOKE["Workload spoke VNet </br> centralus<br/>wl01 · 10.2.0.0/20<br/>Function app +<br/>private endpoints"]
 
   HUBX["Potential regional hub<br/>(e.g. westus2)"]
   HUBY["Potential regional hub<br/>(e.g. westeurope)"]
