@@ -18,6 +18,7 @@ param ipAddressSpace string
 @description('Company domain for the private DNS zone.')
 param companyDomain string
 
+
 @description('Additional subnets to create beyond the default hub layout (subnet name to prefix length).')
 param subnets object = {
   workload: '24'
@@ -38,6 +39,9 @@ param storageEndpoints array = [
   'table'
 ]
 
+
+//this deploys a hub virtual network with Firewall, Gateway and Bastion subnets
+//This also access a custom subnet object
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
 module coreVNet 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   scope: az.resourceGroup(resourceGroupName)
@@ -52,6 +56,8 @@ module coreVNet 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   }
 }
 
+
+//create a private dns zone for our organization
 @description('Private dns zone for our production environment.')
 module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   scope: az.resourceGroup(resourceGroupName)
@@ -61,7 +67,8 @@ module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' =
   }
 }
 
-@description('Private dns zone for our production environment.')
+//create a private dns zone for our app services
+@description('Private dns zone for our app service environment.')
 module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
   scope: az.resourceGroup(resourceGroupName)
   params: {
@@ -71,6 +78,7 @@ module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
 }
 
 
+//registers the hub vNet link with the company private dns zone.  
 @description('Links the hub VNet to the company private DNS zone for auto-registration.')
 module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: az.resourceGroup(resourceGroupName)
@@ -83,6 +91,8 @@ module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtu
   }
 }
 
+
+//registers the hub vNet link with the app service private dns zone.
 @description('Links the hub VNet to the Azure Websites private DNS zone.')
 module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
   scope: az.resourceGroup(resourceGroupName)
@@ -97,6 +107,8 @@ module hubWbesiteDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virt
 
 
 
+// This loops though the storage endpoints object and creates a private dns zone for each.  
+// This has the capability of registering the hub network during zone creation
 @description('Private DNS zones for storage private link endpoints.')
 module storagePrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = [
   for endpoint in storageEndpoints: {
