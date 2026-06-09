@@ -1,0 +1,10 @@
+{
+    "moduleAliases": {
+      "br": {
+        "JSRegistry": {
+          "registry": "jsbicepregistry-dbf7gfeshxcegvgm.azurecr.io",
+          "modulePath": "bicep/modules"
+        }
+      }
+    }
+  }
