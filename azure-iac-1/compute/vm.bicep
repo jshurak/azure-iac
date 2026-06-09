@@ -33,7 +33,7 @@ module vmNsg 'br/public:avm/res/network/network-security-group:0.5.0' = {
       {
         name: 'Allow-SSH-From-Trusted-IP'
         properties: {
-          priority: 1000
+          priority: 100
           direction: 'Inbound'
           access: 'Allow'
           protocol: 'Tcp'
