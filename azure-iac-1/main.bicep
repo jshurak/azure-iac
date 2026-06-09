@@ -32,6 +32,22 @@ param hubNetworkName string
 @description('Name of the virtual network. to create')
 param networkName string = '${namePrefix}-${location}-hub-vnet'
 
+@description('When true, deploys a Linux VM with a public IP in the workload subnet.')
+param deployLinuxVm bool = false
+
+@description('Source IP or CIDR allowed for inbound SSH to the Linux VM (for example, 203.0.113.10/32).')
+param allowedSshSourceIp string = ''
+
+@description('SSH public key for Linux VM authentication.')
+@secure()
+param sshPublicKey string = ''
+
+@description('Administrator username for the Linux VM.')
+param vmAdminUsername string = 'azureuser'
+
+@description('VM size SKU for the Linux VM.')
+param vmSize string = 'Standard_B2s'
+
 
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -72,6 +88,20 @@ module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
     namePrefix: namePrefix
     storageSku: storageSku
     storageAccountName: '${namePrefix}${location}corestorage'
+  }
+}
+
+@description('Optional Linux VM with public IP and SSH restricted to a trusted source IP.')
+module linuxVm './compute/vm.bicep' = if (deployLinuxVm) {
+  scope: coreResourceGroup
+  params: {
+    location: location
+    namePrefix: namePrefix
+    subnetId: coreNetwork.outputs.workloadSubnetId
+    allowedSshSourceIp: allowedSshSourceIp
+    adminUsername: vmAdminUsername
+    sshPublicKey: sshPublicKey
+    vmSize: vmSize
   }
 }
 

@@ -27,3 +27,12 @@ param hubResourceGroupName = 'js-eastus2-core-rg'
 // Company domain for the private dns zone.
 param companyDomain = 'js-company.com'
 
+// Set to true to deploy a Linux VM with a public IP in the workload subnet.
+param deployLinuxVm = false
+
+// Your public IP in CIDR notation (for example, 203.0.113.10/32).
+param allowedSshSourceIp = ''
+
+// SSH public key contents (ssh-rsa AAAA... or ssh-ed25519 AAAA...).
+param sshPublicKey = ''
+
