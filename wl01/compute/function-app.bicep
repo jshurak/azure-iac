@@ -8,6 +8,7 @@ param blobContainerURL string
 param userAssignedResourceID string
 param appInsightInstrumentationKey string
 param functionAppPrivateDnsZoneResourceId string
+param PrivateEndPointSubnetResourceId string
 
 var localResourceGroup = az.resourceGroup()
 
@@ -25,7 +26,7 @@ module functionApp '../../modules/functionapp.bicep' = {
   scope: localResourceGroup
   params: {
     functionAppName: functionAppName
-    virtualNetworkSubnetResourceId: virtualNetworkSubnetResourceId
+    virtualNetworkSubnetResourceId: OutbountVirtualNetworkSubnetResourceId
     storageAccountResourceID: storageAccountResourceID
     storageAccountName: storageAccountName
     userAssignedIdentityClientID: userAssignedIdentityClientID
@@ -43,7 +44,7 @@ module appPrivateEndpoint '../../modules/privateendpoints.bicep' = {
     privateDnsZoneResourceId: functionAppPrivateDnsZoneResourceId
     privateEndpointName: '${namePrefix}-${functionApp.name}-pe'
     serviceID: functionApp.outputs.resourceId
-    subnetResourceID: virtualNetworkSubnetResourceId
+    subnetResourceID: PrivateEndPointSubnetResourceId
     groupIds: ['sites']
   }
 }

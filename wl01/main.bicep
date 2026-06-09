@@ -108,7 +108,7 @@ module functionApp './compute/function-app.bicep' = {
   params: {
     namePrefix: namePrefix
     functionAppName: functionAppName
-    virtualNetworkSubnetResourceId: wlNetwork.outputs.fnSubnetResourceId
+    OutbountVirtualNetworkSubnetResourceId: wlNetwork.outputs.fnSubnetResourceId
     storageAccountResourceID: storage.outputs.resStorageID
     storageAccountName: storage.outputs.resStorageName
     userAssignedIdentityClientID: identity.outputs.clientId
@@ -116,6 +116,7 @@ module functionApp './compute/function-app.bicep' = {
     userAssignedResourceID: identity.outputs.resourceId
     appInsightInstrumentationKey: appInsight.outputs.appInsightInstrumentationKey
     functionAppPrivateDnsZoneResourceId: wlNetwork.outputs.functionAppPrivateDnsZoneResourceId
+    PrivateEndPointSubnetResourceId: wlNetwork.outputs.peSubnetResourceId
   }
 }
 /*
