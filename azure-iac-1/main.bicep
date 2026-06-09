@@ -60,58 +60,6 @@ module coreNetwork './network/network.bicep' = {
   }
 }
 
-
-/*
-@description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../modules/virtualnetwork.bicep' = {
-  scope: coreResourceGroup
-  params:{
-    networkType: 'hub'
-    networkName: networkName
-    location: location
-    CIDR: CIDR
-    ipAddressSpace: ipAddressSpace 
-    namePrefix: namePrefix
-  }
-}
-
-
-@description('peering between central us hub and east us hub')
-module peering '../modules/networkpeering.bicep' = {
-  scope: subscription()
-  params: {
-    net1ResourceGroup: hubResourceGroupName
-    net1NetworkName: hubNetworkName
-    net2ResourceGroup: coreResourceGroup.name
-    net2NetworkName: networkName
-    allowGatewayTransit: false
-  }
-  dependsOn: [
-    coreVNet
-  ]
-}
-
-
-resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
-  scope: resourceGroup(dnsResourceGroup)
-  name: '${namePrefix}-company.com'
-}
-
-module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: resourceGroup(dnsResourceGroup)
-  params: {
-    name: '${networkName}-dns-link'
-    privateDnsZoneName: privateDNSZone.name
-    virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: true
-    tags: {
-      Environment: 'Prod'
-      Owner: ownerName
-    }
-  }
-}
-*/
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault '../modules/keyvault.bicep' = {
   scope: coreResourceGroup
@@ -122,7 +70,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
 }
 
 @description('Core storage account for diagnostics, artifacts, or shared blob data.')
-module coreStorage '../modules/storage.bicep' = {
+module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   scope: coreResourceGroup
   params: {
     namePrefix: namePrefix

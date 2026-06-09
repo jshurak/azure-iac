@@ -59,7 +59,7 @@ module coreKeyvault '../modules/keyvault.bicep' = {
 }
 
 @description('Core storage account for diagnostics, artifacts, or shared blob data.')
-module coreStorage '../modules/storage.bicep' = {
+module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   scope: coreResourceGroup
   params: {
     namePrefix: namePrefix

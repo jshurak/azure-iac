@@ -39,7 +39,7 @@ param storageEndpoints array = [
 ]
 
 @description('Hub virtual network with Firewall, Gateway, and Bastion subnets.')
-module coreVNet '../../modules/virtualnetwork.bicep' = {
+module coreVNet 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   scope: az.resourceGroup(resourceGroupName)
   params: {
     networkType: 'hub'

@@ -55,7 +55,7 @@ resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing 
 
 //start network buildout
 @description('Virtual network and subnets for the workload.')
-module wlNetwork '../../modules/virtualnetwork.bicep' = {
+module wlNetwork 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   scope: localResrourceGroup
   params: {
     networkName: networkName
