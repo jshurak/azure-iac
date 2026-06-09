@@ -60,7 +60,7 @@ module coreVNet 'br/JSRegistry:network/virtual-network:v1.0.0' = {
   }
 }
 
-
+//peering between central us hub and east us hub
 @description('peering between central us hub and east us hub')
 module peering 'br/JSRegistry:network/peering:v1.0.0' = {
   scope: subscription()
