@@ -44,7 +44,7 @@ Solid arrows are peering links deployed by this repository; dashed elements show
 | Stack | Scope | Region (default) | Resource group | Purpose |
 |-------|-------|------------------|----------------|---------|
 | [`azure-iac-0/`](azure-iac-0/) | Subscription | `eastus2` | `{namePrefix}-{location}-core-rg` | Primary landing zone: hub VNet, **new** private DNS zones, Key Vault, and core storage. |
-| [`azure-iac-1/`](azure-iac-1/) | Subscription | `centralus` | `{namePrefix}-{location}-core-rg` | Secondary-region hub: VNet peering to `azure-iac-0`, links to **existing** DNS zones in the primary region. |
+| [`azure-iac-1/`](azure-iac-1/) | Subscription | `centralus` | `{namePrefix}-{location}-core-rg` | Secondary-region hub: VNet peering to `azure-iac-0`, links to **existing** DNS zones in the primary region, and optional Linux VM in a hub workload subnet. |
 | [`wl01/`](wl01/) | Subscription | `centralus` | `{namePrefix}-{location}-rg` | Sample workload: Python Flex Consumption function app with private networking, private endpoints, and identity-based storage access. |
 
 Default parameter values for each stack live in the matching `main.bicepparam` file.
@@ -52,7 +52,7 @@ Default parameter values for each stack live in the matching `main.bicepparam` f
 ### Recommended deployment order
 
 1. **azure-iac-0** — Creates the primary hub (`10.0.0.0/16`), company private DNS zone, `privatelink.AzureWebSites.net`, and storage private link zones (`blob`, `queue`, `table`).
-2. **azure-iac-1** — Deploys the secondary hub (`10.1.0.0/16`), peers it to the eastus2 hub, and links the new VNet to DNS zones in `js-eastus2-core-rg`.
+2. **azure-iac-1** — Deploys the secondary hub (`10.1.0.0/16`), peers it to the eastus2 hub, links the new VNet to DNS zones in `js-eastus2-core-rg`, and optionally deploys a Linux VM when `deployLinuxVm` is `true`.
 3. **wl01** — Deploys a spoke (`10.2.0.0/20`), peers to the regional hub, links to shared DNS zones, and provisions the function app stack with private endpoints.
 
 Update `main.bicepparam` in each stack to match your subscription naming before deploying.
@@ -65,7 +65,7 @@ Update `main.bicepparam` in each stack to match your subscription naming before 
 
 | Component | Description |
 |-----------|-------------|
-| Hub VNet | Firewall, Gateway, Bastion, and optional workload subnets via `br/JSRegistry:network/virtual-network:v1.0.0`. |
+| Hub VNet | Firewall, Gateway, Bastion, and optional extra subnets (default includes `workload` /24) via `br/JSRegistry:network/virtual-network:v1.0.0`. |
 | Private DNS | Company domain zone, `privatelink.AzureWebSites.net`, and per-service storage zones with VNet links. |
 | Key Vault | RBAC-enabled vault with template-deployment access. |
 | Storage | Core `StorageV2` account for diagnostics and shared artifacts. |
@@ -74,13 +74,22 @@ Default address space: `10.0.0.0/16` in `eastus2`.
 
 ### azure-iac-1 — secondary-region hub
 
-Same core resources as `azure-iac-0`, but networking differs:
+[`main.bicep`](azure-iac-1/main.bicep) creates `{namePrefix}-{location}-core-rg` and delegates networking to [`network/network.bicep`](azure-iac-1/network/network.bicep). Same core resources as `azure-iac-0`, with cross-region networking and an optional compute module:
+
+```
+azure-iac-1/
+├── main.bicep              # Subscription entry point
+├── main.bicepparam         # Environment parameters (incl. optional VM)
+├── network/network.bicep   # Hub VNet, peering, DNS zone links
+└── compute/vm.bicep        # Optional Linux VM (when deployLinuxVm = true)
+```
 
 | Component | Description |
 |-----------|-------------|
-| Hub VNet | New hub in the second region (`10.1.0.0/16` by default). |
+| Hub VNet | New hub in the second region (`10.1.0.0/16` by default) with default hub subnets plus a `workload` subnet (`/24`). |
 | VNet peering | Bidirectional peering to the `azure-iac-0` hub via `br/JSRegistry:network/peering:v1.0.0`. |
 | Private DNS | References **existing** zones in `hubResourceGroupName` (default `js-eastus2-core-rg`) and creates VNet links only. |
+| Compute (optional) | Ubuntu Linux VM with public IP, NSG-restricted SSH, and placement in the hub `workload` subnet. Controlled by `deployLinuxVm`; SSH key is read from Key Vault via `az.getSecret` in the parameter file. |
 
 Deploy this stack after `azure-iac-0` so the shared DNS zones already exist.
 
@@ -121,6 +130,7 @@ The `br/JSRegistry:network/virtual-network` module carves hub subnets from the V
 | `AzureFirewallSubnet` | /26 |
 | `AzureFirewallManagementSubnet` | /26 |
 | `AzureBastionSubnet` | /26 |
+| `workload` | /24 (via `subnets` parameter; used by `azure-iac-1` for optional VM placement) |
 
 Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subnets` parameter. The module outputs `subnetIDs`, `subnetNames`, `NetworkResourceID`, and `NetworkName`.
 
@@ -136,6 +146,7 @@ Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subn
 
 ```
 .
+├── bicepconfig.json                      # Maps br/JSRegistry to the private ACR module path
 ├── azure-iac-0/                          # Primary landing-zone deployment
 │   ├── main.bicep
 │   ├── main.bicepparam
@@ -143,7 +154,8 @@ Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subn
 ├── azure-iac-1/                          # Secondary-region landing zone
 │   ├── main.bicep
 │   ├── main.bicepparam
-│   └── network/network.bicep
+│   ├── network/network.bicep
+│   └── compute/vm.bicep                  # Optional Linux VM (deployLinuxVm)
 ├── wl01/                                 # Sample function-app workload
 │   ├── main.bicep
 │   ├── main.bicepparam
@@ -162,27 +174,33 @@ Set `networkType` to `hub` or `spoke`. Additional subnets merge in via the `subn
     ├── keyvault.bicep
     ├── storage.bicep
     ├── privateendpoints.bicep
+    ├── privatelink.bicep
     ├── appserviceplan.bicep
     ├── appinsight.bicep
     └── functionapp.bicep
 ```
 
-New workload stacks should follow the `wl01` pattern of domain folders under the stack root and consume shared building blocks from `br/JSRegistry:...`.
+Landing-zone stacks (`azure-iac-0`, `azure-iac-1`) keep subscription entry points at the stack root with domain modules underneath. New workload stacks should follow the `wl01` pattern and consume shared building blocks from `br/JSRegistry:...`.
 
 ## Bicep registry modules
 
 Active deployments reference the private `JSRegistry` Bicep registry and, in a few cases, AVM public modules directly (for example, private DNS zone links and subnet resources).
 
-| Registry module | Used for |
-|-----------------|----------|
-| `network/virtual-network:v1.0.0` | Hub and spoke VNets with type-specific default subnets. |
-| `network/peering:v1.0.0` | Bidirectional VNet peering across resource groups. |
-| `network/private-endpoint:v1.0.0` | Private endpoints with DNS zone groups. |
-| `key-vault:v1.0.0` | RBAC-enabled Key Vault. |
-| `storage/storage-account:v1.5.1` | StorageV2 accounts, containers, and RBAC. |
-| `web/app-service-plan:v1.0.0` | Linux Flex Consumption plan (FC1). |
-| `web/function-app:v1.0.0` | Python Flex Consumption function app with identity-based deployment storage. |
-| `ops/app-insight:v1.0.0` | Log Analytics workspace and Application Insights. |
+| Module | Used for |
+|--------|----------|
+| `br/JSRegistry:network/virtual-network:v1.0.0` | Hub and spoke VNets with type-specific default subnets. |
+| `br/JSRegistry:network/peering:v1.0.0` | Bidirectional VNet peering across resource groups. |
+| `br/JSRegistry:network/private-endpoint:v1.0.0` | Private endpoints with DNS zone groups. |
+| `br/JSRegistry:key-vault:v1.0.0` | RBAC-enabled Key Vault. |
+| `br/JSRegistry:storage/storage-account:v1.5.1` | StorageV2 accounts, containers, and RBAC. |
+| `br/JSRegistry:web/app-service-plan:v1.0.0` | Linux Flex Consumption plan (FC1). |
+| `br/JSRegistry:web/function-app:v1.0.0` | Python Flex Consumption function app with identity-based deployment storage. |
+| `br/JSRegistry:ops/app-insight:v1.0.0` | Log Analytics workspace and Application Insights. |
+| `br/public:avm/res/network/private-dns-zone:*` | Private DNS zones and VNet links (landing-zone networking). |
+| `br/public:avm/res/network/network-security-group:0.5.0` | NSG for optional Linux VM SSH restriction (`azure-iac-1`). |
+| `br/public:avm/res/compute/virtual-machine:0.22.1` | Optional Ubuntu Linux VM (`azure-iac-1`). |
+
+The `br/JSRegistry` alias resolves through [`bicepconfig.json`](bicepconfig.json) to the private container registry module path.
 
 ### Legacy local modules
 
@@ -199,7 +217,9 @@ az bicep build --file azure-iac-0/main.bicep
 
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) with Bicep (`az bicep install` if needed)
 - Azure subscription with rights to deploy at subscription scope and create resource groups
+- Access to the private Bicep registry referenced in [`bicepconfig.json`](bicepconfig.json) (`br/JSRegistry:...`)
 - For CI/CD: GitHub OIDC federation for [`azure/login@v2`](https://github.com/Azure/login)
+- For `azure-iac-1` VM deploys: a Key Vault secret (for example `ssh-ICE`) holding the SSH public key, referenced from `main.bicepparam`
 
 ## Local development
 
@@ -275,6 +295,8 @@ Path filters isolate changes: `azure-iac-0/**`, `azure-iac-1/**`, and `wl01/**` 
 | `AZURE_TENANT_ID` | Secret | Microsoft Entra tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Secret | Target subscription |
 | `AZURE_RESOURCE_GROUP_NAME` | Secret or variable | Resource group context for validate and deploy steps |
+| `AZURE_KEYVAULT_RESOURCEGROUP_NAME` | Secret | Key Vault resource group for `azure-iac-1` SSH key lookup |
+| `AZURE_KEYVAULT_NAME` | Secret | Key Vault name for `azure-iac-1` SSH key lookup |
 
 Configure [federated credentials](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust) on the app registration for passwordless GitHub Actions login.
 
