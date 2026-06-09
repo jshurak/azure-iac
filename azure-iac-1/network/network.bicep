@@ -118,10 +118,4 @@ module storageDNSLink 'br/public:avm/res/network/private-dns-zone/virtual-networ
 ]
 
 
-@description('add a public ip for our test vm')
-module vmPublicIP 'br/public:avm/res/network/public-ip-address:0.12.0' = {
-  params: {
-    name: '${namePrefix}-test-vm-public-ip'
-    skuName: 'StandardV2'
-  }
-}
+output subnetIDs array = coreVNet.outputs.subnetIDs
