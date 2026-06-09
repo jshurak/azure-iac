@@ -50,7 +50,7 @@ module coreNetwork './network/network.bicep' = {
 
 
 @description('Key Vault for secrets and certificates used by the landing zone.')
-module coreKeyvault '../modules/keyvault.bicep' = {
+module coreKeyvault 'br/JSRegistry:key-vault:v1.0.0' = {
   scope: coreResourceGroup
   params: {
     location: location
