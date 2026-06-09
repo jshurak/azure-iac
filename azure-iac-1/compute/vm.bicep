@@ -79,6 +79,7 @@ module vm 'br/public:avm/res/compute/virtual-machine:0.22.1' = {
     nicConfigurations: [
       {
         nicSuffix: '-nic-01'
+        enableAcceleratedNetworking: false
         networkSecurityGroupResourceId: vmNsg.outputs.resourceId
         ipConfigurations: [
           {
