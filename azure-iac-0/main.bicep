@@ -28,6 +28,8 @@ param networkName string
 param companyDomain string
 
 
+
+//The resource group that we are going to host our core services
 @description('Resource group that hosts core landing-zone networking, secrets, and storage.')
 resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${namePrefix}-${location}-core-rg'
@@ -35,6 +37,8 @@ resource coreResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 
+
+//Deploy a core hub network that will host our global services.
 @description('Hub virtual network, private DNS zones, and storage private link DNS for the landing zone.')
 module coreNetwork './network/network.bicep' = {
   scope: coreResourceGroup
@@ -49,6 +53,8 @@ module coreNetwork './network/network.bicep' = {
 }
 
 
+
+//Deploy a key vault that will host our secrets and certificates.
 @description('Key Vault for secrets and certificates used by the landing zone.')
 module coreKeyvault 'br/JSRegistry:key-vault:v1.0.0' = {
   scope: coreResourceGroup
@@ -58,6 +64,7 @@ module coreKeyvault 'br/JSRegistry:key-vault:v1.0.0' = {
   }
 }
 
+//Deploy a core storage account that will host our diagnostics, artifacts, and shared blob data.
 @description('Core storage account for diagnostics, artifacts, or shared blob data.')
 module coreStorage 'br/JSRegistry:storage/storage-account:v1.5.1' = {
   scope: coreResourceGroup

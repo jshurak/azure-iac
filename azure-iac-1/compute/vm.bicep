@@ -23,6 +23,7 @@ param vmSize string = 'Standard_B2s'
 
 var vmName = '${namePrefix}-linux-vm'
 
+
 @description('NSG restricting inbound SSH to a single trusted source IP.')
 module vmNsg 'br/public:avm/res/network/network-security-group:0.5.0' = {
   name: 'linux-vm-nsg-deployment'

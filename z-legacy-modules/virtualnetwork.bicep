@@ -41,7 +41,7 @@ var subnetDefaults = {
   }
 }
 
-
+//this joins the default subnets with and subnets that are sent with the subnets parameter
 var vDefaultSubnets = subnetDefaults[networkType]
 var vAllSubnets = union(vDefaultSubnets, subnets)
 
@@ -51,10 +51,12 @@ var vAllSubnets = union(vDefaultSubnets, subnets)
 @description('Full VNet address space in CIDR notation (for example, 10.0.0.0/16).')
 var vnetAddressPrefix = '${ipAddressSpace}${CIDR}'
 
+//if a networkName is provided, use it, otherwise use the namePrefix
+var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}-vnet'
 
-var vNetworkName = !empty(networkName) ? networkName : '${namePrefix}--vnet'
-
-
+//This creates the virtual network with the name, location, address prefixes, and subnets
+//loops through the vAllSubnets object to create subnets.  Calculates addressPrefix using the cidrSubnet function.
+//sets privateEndpointNetworkPolicies to Enabled.  Needs to be enabled to use UDRs/NSGs on private endpoints.
 @description(' virtual network from Azure Verified Modules (AVM).')
 module Network 'br/public:avm/res/network/virtual-network:0.9.0' = {
   params: {
@@ -73,7 +75,7 @@ module Network 'br/public:avm/res/network/virtual-network:0.9.0' = {
 }
 
 
-
+//this outputs the subnet resource IDs, names, and the full resource ID of the deployed virtual network.
 
 @description('ARM resource IDs of subnets created in the  virtual network.')
 output subnetIDs array = Network.outputs.subnetResourceIds
