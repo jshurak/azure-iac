@@ -44,14 +44,6 @@ param storageEndpoints array = [
 ]
 
 
-//any existing resources that we need for this.  
-//In this case, we need a private dns zone to set registration for the workload vNet.
-@description('Private dns zone for our production environment.')
-resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
-  scope: resourceGroup(dnsResourceGroupName)
-  name: companyDomain
-}
-
 
 //start network buildout
 @description('Virtual network and subnets for the workload.')
@@ -92,20 +84,6 @@ module fnSubnet 'br/public:avm/res/network/virtual-network/subnet:0.2.0' = {
 }
 
 
-
-@description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
-module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
-  scope: resourceGroup(dnsResourceGroupName)
-  params: {
-    name: '${networkName}-dns-link'
-    privateDnsZoneName: privateDNSZone.name
-    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
-    location: 'global'
-    registrationEnabled: true
-  }
-}
-
-
 @description('Bidirectional peering between the hub and spoke virtual networks.')
 module peering 'br/JSRegistry:network/peering:v1.0.0' = {
   scope: subscription()
@@ -120,6 +98,32 @@ module peering 'br/JSRegistry:network/peering:v1.0.0' = {
     wlNetwork
   ]
 }
+
+
+
+//we need a private dns zone to set registration for the workload vNet.
+@description('Private dns zone for our production environment.')
+resource privateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  scope: resourceGroup(dnsResourceGroupName)
+  name: companyDomain
+}
+
+
+
+@description('Links the spoke VNet to the existing private DNS zone for auto-registration.')
+module hubNetworkLink 'br/public:avm/res/network/private-dns-zone/virtual-network-link:0.1.0' = {
+  scope: resourceGroup(dnsResourceGroupName)
+  params: {
+    name: '${networkName}-dns-link'
+    privateDnsZoneName: privateDNSZone.name
+    virtualNetworkResourceId: wlNetwork.outputs.NetworkResourceID
+    location: 'global'
+    registrationEnabled: true
+  }
+}
+
+
+
 
 @description('Existing storage private link DNS zones in the hub resource group.')
 resource storagePrivateDNSZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = [
