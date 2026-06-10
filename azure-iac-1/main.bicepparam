@@ -30,7 +30,7 @@ param companyDomain = 'js-company.com'
 // Set to true to deploy a Linux VM with a public IP in the workload subnet.
 param deployLinuxVm = false
 
-// Your public IP in CIDR notation (for example, 203.0.113.10/32).
+// Your public IP in CIDR notation (for example, 203.0.113.10/32) or single IP address.
 param allowedSshSourceIp = ''
 
 param sshKeyVaultSecretName = ''
