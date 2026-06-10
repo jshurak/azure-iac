@@ -28,7 +28,7 @@ param hubResourceGroupName = 'js-eastus2-core-rg'
 param companyDomain = 'js-company.com'
 
 // Set to true to deploy a Linux VM with a public IP in the workload subnet.
-param deployLinuxVm = false
+param deployLinuxVm = true
 
 // Your public IP in CIDR notation (for example, 203.0.113.10/32) or single IP address.
 param allowedSshSourceIp = ''
