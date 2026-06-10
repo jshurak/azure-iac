@@ -31,7 +31,7 @@ param companyDomain = 'js-company.com'
 param deployLinuxVm = true
 
 // Your public IP in CIDR notation (for example, 203.0.113.10/32).
-param allowedSshSourceIp = '141.152.229.55'
+param allowedSshSourceIp = ''
 
 //get our public ssh key Azure Key Vault
 param sshPublicKey = az.getSecret(subscription, keyVaultResourceGroupName, keyVaultName, 'ssh-ICE')

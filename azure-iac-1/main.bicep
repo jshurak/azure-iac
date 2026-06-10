@@ -36,7 +36,7 @@ param networkName string = '${namePrefix}-${location}-hub-vnet'
 param deployLinuxVm bool = false
 
 @description('Source IP or CIDR allowed for inbound SSH to the Linux VM (for example, 203.0.113.10/32).')
-param allowedSshSourceIp string = ''
+param allowedSshSourceIp string 
 
 @description('SSH public key for Linux VM authentication.')
 @secure()
