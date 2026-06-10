@@ -65,7 +65,7 @@ jobs:
   checkov:
     runs-on: ubuntu-latest
     env:
-      BICEP_CACHE_DIRECTORY: ${{ runner.temp }}/bicep-cache
+      BICEP_CACHE_DIRECTORY: ${{ env.RUNNER_TEMP }}/bicep-cache
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -91,7 +91,7 @@ jobs:
       - name: Run Checkov on restored registry modules
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: ${{ runner.temp }}/bicep-cache/br
+          directory: ${{ env.RUNNER_TEMP }}/bicep-cache/br
           framework: arm
           check: CKV_AZURE_159,CKV_AZURE_211,CKV_AZURE_207
           output_format: cli,sarif
