@@ -82,7 +82,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: azure-iac-1/main.bicep
           parameters-file: azure-iac-1/main.bicepparam
-          parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}, keyVaultResourceGroupName: ${{ secrets.AZURE_KEYVAULT_RESOURCEGROUP_NAME }}, keyVaultName: ${{secrets.AZURE_KEYVAULT_NAME}}}'
+          parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}, keyVaultResourceGroupName: ${{ secrets.AZURE_KEYVAULT_RESOURCEGROUP_NAME }}, keyVaultName: ${{secrets.AZURE_KEYVAULT_NAME}}, sshKeyVaultSecretName: ${{secrets.SSH_KEY_NAME}}, allowedSshSourceIp: ${{ secrets.SITE_PIP }}}'
           action-on-unmanage-resources: delete
           deny-settings-mode: none
           location: centralus

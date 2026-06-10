@@ -42,6 +42,10 @@ param allowedSshSourceIp string
 @secure()
 param sshPublicKey string = ''
 
+@description('Name of the Key Vault secret containing the SSH public key. ')
+#disable-next-line no-unused-params
+param sshKeyVaultSecretName string
+
 @description('Administrator username for the Linux VM.')
 param vmAdminUsername string = 'azureuser'
 
