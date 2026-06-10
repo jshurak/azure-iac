@@ -88,7 +88,6 @@ jobs:
           framework: bicep
           output_format: cli,sarif
           output_file_path: console,results-templates.sarif
-          soft_fail: true
       - name: Run Checkov on restored registry modules
         uses: bridgecrewio/checkov-action@v12
         with:
@@ -97,7 +96,6 @@ jobs:
           check: CKV_AZURE_159,CKV_AZURE_211,CKV_AZURE_207
           output_format: cli,sarif
           output_file_path: console,results-modules.sarif
-          soft_fail: true
       - name: Upload template SARIF
         if: success() || failure()
         uses: github/codeql-action/upload-sarif@v4
