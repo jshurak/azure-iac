@@ -47,8 +47,7 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: wl01/main.bicep
           parameters-file: wl01/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
-          location: eastus2
+          location: centralus
       - name: What-if Preview
         uses: azure/bicep-deploy@v2
         with:
@@ -60,14 +59,13 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
           template-file: wl01/main.bicep
           parameters-file: wl01/main.bicepparam
-          #parameters: '{subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}}'
-          location: eastus2
+          location: centralus
       - name: Run Checkov actions/checkout
         id:  checkov
         uses: bridgecrewio/checkov-action@master
         with:
           directory: wl01/
-          check: CKV_AZURE_159,CKV_AZURE_211,CKV_AZURE_207
+          skip_check: CKV_AZURE_178 #skipping this check as it is currently yielding false positives
           framework: bicep
       - name: Upload SARIF --file
         if: success() || failure()

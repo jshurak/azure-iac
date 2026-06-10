@@ -36,11 +36,15 @@ param networkName string = '${namePrefix}-${location}-hub-vnet'
 param deployLinuxVm bool = false
 
 @description('Source IP or CIDR allowed for inbound SSH to the Linux VM (for example, 203.0.113.10/32).')
-param allowedSshSourceIp string = ''
+param allowedSshSourceIp string 
 
 @description('SSH public key for Linux VM authentication.')
 @secure()
 param sshPublicKey string = ''
+
+@description('Name of the Key Vault secret containing the SSH public key. ')
+#disable-next-line no-unused-params
+param sshKeyVaultSecretName string
 
 @description('Administrator username for the Linux VM.')
 param vmAdminUsername string = 'azureuser'

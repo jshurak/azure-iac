@@ -28,13 +28,15 @@ param hubResourceGroupName = 'js-eastus2-core-rg'
 param companyDomain = 'js-company.com'
 
 // Set to true to deploy a Linux VM with a public IP in the workload subnet.
-param deployLinuxVm = true
+param deployLinuxVm = false
 
-// Your public IP in CIDR notation (for example, 203.0.113.10/32).
-param allowedSshSourceIp = '141.152.229.55'
+// Your public IP in CIDR notation (for example, 203.0.113.10/32) or single IP address.
+param allowedSshSourceIp = ''
+
+param sshKeyVaultSecretName = ''
 
 //get our public ssh key Azure Key Vault
-param sshPublicKey = az.getSecret(subscription, keyVaultResourceGroupName, keyVaultName, 'ssh-ICE')
+param sshPublicKey = az.getSecret(subscription, keyVaultResourceGroupName, keyVaultName, sshKeyVaultSecretName)
 
 
 //paramters to be passed in from the pipeline

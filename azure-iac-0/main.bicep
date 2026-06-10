@@ -1,5 +1,5 @@
 targetScope = 'subscription'
-metadata description = 'Subscription-scoped landing zone: core resource group, hub network, Key Vault, and storage.'
+metadata description = 'Subscription-scoped landing zone: core resource group, hub network, Key Vault, and storage'
 
 @description('Azure region for the core resource group and deployed modules.')
 param location string
