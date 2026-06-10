@@ -67,16 +67,6 @@ module customPrivateDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' =
   }
 }
 
-//create a private dns zone for our app services
-@description('Private dns zone for our app service environment.')
-module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
-  scope: az.resourceGroup(resourceGroupName)
-  params: {
-    name: 'privatelink.AzureWebSites.net'
-    location: 'global'
-  }
-}
-
 
 //registers the hub vNet link with the company private dns zone.  
 @description('Links the hub VNet to the company private DNS zone for auto-registration.')
@@ -88,6 +78,16 @@ module hubCustomDNSNetworkLink 'br/public:avm/res/network/private-dns-zone/virtu
     virtualNetworkResourceId: coreVNet.outputs.NetworkResourceID
     location: 'global'
     registrationEnabled: true
+  }
+}
+
+//create a private dns zone for our app services
+@description('Private dns zone for our app service environment.')
+module websitesDNSZone 'br/public:avm/res/network/private-dns-zone:0.8.1' = {
+  scope: az.resourceGroup(resourceGroupName)
+  params: {
+    name: 'privatelink.AzureWebSites.net'
+    location: 'global'
   }
 }
 
