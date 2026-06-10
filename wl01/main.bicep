@@ -1,4 +1,4 @@
-metadata description = 'This workload deploys a function app with spoke networking, private endpoints, and identity-based storage access'
+metadata description = 'This workload deploys a function app with spoke networking, private endpoints, and identity-based storage access.'
 targetScope = 'subscription'
 
 /*
